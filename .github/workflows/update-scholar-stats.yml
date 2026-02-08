@@ -6,6 +6,13 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
+concurrency:
+  group: scholar-stats
+  cancel-in-progress: true
+
 jobs:
   update-stats:
     runs-on: ubuntu-latest
@@ -26,8 +33,8 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Run scraper
-        run: |
-          python scripts/fetch_scholar_stats.py
+        run: | 
+          python scripts/fetch_scholar_stats.py || echo "Scrape failed; keeping old stats."
 
       - name: Commit updated JSON
         run: |
@@ -36,9 +43,7 @@ jobs:
           git add static/scholar_stats.json || true
           if ! git diff --staged --quiet; then
             git commit -m "chore: update scholar_stats.json (automated)" || true
-            git push
+            git push origin HEAD
           else
             echo "No changes to commit"
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
