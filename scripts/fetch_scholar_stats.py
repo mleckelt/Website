@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 
 # Set your Google Scholar profile URL (public profile)
 SCHOLAR_URL = 'https://scholar.google.de/citations?user=arVjclEAAAAJ&hl=en'
-OUT_FILE = 'scholar_stats.json'
+OUT_FILE = 'static/scholar_stats.json'
 
 
 def fetch_stats(url):

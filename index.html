@@ -67,7 +67,7 @@
         header { border-left: 3px solid var(--neon-magenta); padding-left: 25px; margin-bottom: 40px; }
         
         .breadcrumb { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; color: var(--neon-cyan); margin-bottom: 10px; }
-        h1 { font-size: 2.2rem; margin: 0; letter-spacing: -0.02em; }
+        h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.02em; }
         
         section { margin-top: 40px; }
         h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
@@ -228,8 +228,8 @@
     <div class="container">
         <header>
             <div class="breadcrumb">system / profiles / exec_dir_ai</div>
-            <h1>[Marius 🙋🏻‍♂️]</h1>
-            <p style="color: var(--muted); font-size: 1.2rem; margin-top: 5px;">AI Strategy Director & Behavioral Scientist</p>
+            <h1>Hi, thanks for stopping by. 🙋🏻‍♂️ <br/>- Marius</h1>
+            <p style="color: var(--muted); font-size: 1.2rem; margin-top: 5px;">AI (Strategy) Director & Behavioral Scientist</p>
         </header>
 
         <nav class="console-nav" aria-label="Sections">
@@ -241,10 +241,10 @@
 
         <section id="home" class="tab-section" data-tab="home">
             <h2>// Home</h2>
-            <p style="color: var(--muted); margin-top:-8px;">I build AI systems that work in the real world; grounded in <span class="psych-term" data-definition="I am a former psychology professor and use my experience in the empirical study of human decision‑making, cognition, and behavior to design human-centred AI.">behavioral science</span>.</p>
+            <p style="color: var(--muted); margin-top:-8px;"><span class="psych-term" data-definition="Currently at a global management consulting company.">I build and advise on AI systems</span> that work in the real world; grounded in <span class="psych-term" data-definition="I am a former psychology professor and use my experience in the empirical study of human decision‑making, cognition, and behavior to design human-centred AI.">behavioral science</span>.</p>
             <div style="margin-top:14px; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04);">
                 <p style="margin:0;">
-                    Welcome. This site is intentionally minimal: you can find way to contact me and, if interested, browse my research outputs and public-facing media.
+                    Welcome. This site is intentionally minimal: you can find ways to contact me and, if interested, browse my research outputs and public-facing media.
                 </p>
                 <p style="margin-top:10px; margin-bottom:0; font-family: monospace; color: rgba(255,255,255,0.9);">
                     Navigate:
@@ -516,14 +516,14 @@
         (function(){
             const el = document.getElementById('scholar-stats');
             if (!el) return;
-            fetch('scholar_stats.json')
+            fetch('static/scholar_stats.json')
                 .then(r => {
                     if (!r.ok) throw new Error('No stats file');
                     return r.json();
                 })
                 .then(data => {
                     // render subtle stats
-                    el.innerHTML = `<span style="color:var(--muted);">Scholar:</span> <span style="color:var(--neon-cyan); font-family: 'JetBrains Mono', monospace; font-weight:600;">${data.citations}</span> citations · h=${data.h_index} · h10=${data.h_index_10}`;
+                    el.innerHTML = `<span style="color:var(--muted);">Academic impact:</span> <span style="color:var(--neon-cyan); font-family: 'JetBrains Mono', monospace; font-weight:600;">${data.citations}</span> citations · h=${data.h_index} · h10=${data.h_index_10}`;
                 })
                 .catch(() => {
                     // silent fail (do not show anything if no file)
