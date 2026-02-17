@@ -30,12 +30,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4
+          pip install requests
 
       - name: Run scraper
-        run: | 
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+        run: |
           python scripts/fetch_scholar_stats.py || echo "Scrape failed; keeping old stats."
-
+          
       - name: Commit updated JSON
         run: |
           git config user.name "github-actions[bot]"
