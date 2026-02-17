@@ -31,7 +31,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests
-
+      - name: Debug SerpAPI key presence (safe)
+        env:
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+        run: |
+          if [ -z "$SERPAPI_KEY" ]; then
+            echo "SERPAPI_KEY is empty/missing"
+            exit 1
+          fi
+          echo "SERPAPI_KEY present, length=${#SERPAPI_KEY}"
       - name: Run scraper
         env:
           SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}

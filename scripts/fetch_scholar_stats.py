@@ -25,6 +25,8 @@ def fetch_stats():
     }
 
     r = requests.get(url, params=params, timeout=30)
+    if r.status_code != 200:
+        print("SerpAPI error:", r.status_code, r.text[:500])
     r.raise_for_status()
     data = r.json()
 
