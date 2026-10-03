@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Millionaire Personality Index — Marius Leckelt</title>
+<meta name="description" content="A short quiz scoring your similarity to the millionaire personality profile from two published studies on the personality of high-net-worth individuals.">
+<link rel="icon" href="https://fav.farm/🔬">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="static/site.css">
+
+<style>
+/* quiz-only; shared styles live in static/site.css */
+.page{ padding-block-end:140px; }
+#quiz.hide{ display:none; }
+#results{ display:none; }
+#results.show{ display:grid; }
+.stickybar.hide{ display:none; }
+
+.note{ margin:0 0 20px; font-size:15.5px; line-height:1.6; color:var(--ink-2); max-width:60ch; }
+
+/* ---------- quiz items ---------- */
+.item{
+  border-bottom:1px solid var(--rule);
+  padding:20px 0 22px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.item legend{ padding:0; }
+.item .stem{ font-family:var(--sans); font-size:13px;   color:var(--dim); margin-bottom:4px; }
+.item .text{ font-size:16.5px; font-weight:500; color:var(--ink); max-width:58ch; }
+
+.scale{ display:flex; flex-direction:column; gap:7px; }
+.scale .cells{ display:flex; gap:5px; }
+.cell{ position:relative; flex:1 1 0; max-width:44px; }
+.cell input{
+  position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;
+}
+.cell label{
+  display:flex; align-items:center; justify-content:center;
+  height:34px;
+  border:1px solid var(--rule); border-radius:5px;
+  background:var(--panel); color:var(--mut);
+  font-family:var(--sans);
+  font-size:12px; font-variant-numeric:tabular-nums;
+  cursor:pointer; transition:border-color .12s,color .12s,background .12s;
+}
+.cell input:hover + label{ border-color:var(--acc-dim); color:var(--ink); }
+.cell input:checked + label{ background:var(--acc); border-color:var(--acc); color:var(--acc-ink); font-weight:600; }
+.cell input:focus-visible + label{ outline:2px solid var(--acc); outline-offset:2px; }
+
+.scale .caps{ display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--dim); }
+.scale .caps span{ max-width:22ch; }
+.scale .caps span:last-child{ text-align:right; }
+
+fieldset{ border:0; margin:0; padding:0; }
+
+/* ---------- sticky progress bar ---------- */
+.stickybar{
+  position:fixed; left:0; right:0; bottom:0; z-index:20;
+  background:rgba(251,251,249,.92); backdrop-filter:blur(6px);
+  border-top:1px solid var(--rule);
+}
+.stickybar .track{ height:2px; background:var(--rule); }
+.stickybar .fill{ height:100%; background:var(--acc); width:0%; transition:width .2s; }
+.stickybar .row2{
+  max-width:1180px; margin:0 auto; padding:12px clamp(20px,4.5vw,56px);
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+}
+.stickybar .status{ font-family:var(--sans); font-size:13px; color:var(--mut); letter-spacing:.03em; font-variant-numeric:tabular-nums; }
+.stickybar .status b{ color:var(--ink); font-weight:600; }
+
+.btn{
+  appearance:none; -webkit-appearance:none;
+  background:transparent; border:1px solid var(--rule); border-radius:6px;
+  color:var(--ink); font:inherit; font-size:13px;
+  padding:9px 16px; cursor:pointer;
+  display:inline-flex; gap:9px; align-items:center;
+  transition:border-color .12s,color .12s,background .12s,opacity .12s;
+}
+.btn:hover:not(:disabled){ border-color:var(--acc-dim); color:var(--acc); }
+.btn:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+.btn:disabled{ opacity:.4; cursor:not-allowed; }
+.btn.primary{ background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
+.btn.primary:hover:not(:disabled){ background:#264C40; border-color:#264C40; color:#fff; }
+.btn.primary:disabled{ background:var(--acc-dim); border-color:var(--acc-dim); color:#fff; opacity:.55; }
+
+.score-panel{ display:flex; align-items:flex-end; gap:26px; flex-wrap:wrap; padding:0 0 4px; }
+.score-num{
+  font-family:var(--sans);
+  font-size:clamp(48px,8vw,64px); font-weight:500; line-height:1;
+  color:var(--acc); font-variant-numeric:tabular-nums; letter-spacing:-.02em;
+}
+.score-num .max{ font-size:.32em; color:var(--dim); font-weight:400; margin-left:4px; }
+.score-meta{ flex:1 1 220px; min-width:220px; padding-bottom:6px; }
+.score-label{ font-size:16px; font-weight:600; color:var(--ink); margin:0 0 6px; }
+.score-sub{ font-size:14.5px; color:var(--mut); max-width:48ch; margin:0; }
+
+.gauge{ height:6px; border-radius:3px; background:var(--rule); overflow:hidden; margin:22px 0 0; position:relative; }
+.gauge .fill{ height:100%; background:var(--acc); width:0%; transition:width .5s ease; }
+.gauge .mid{ position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--dim); }
+.gauge-caps{ display:flex; justify-content:space-between; font-family:var(--sans); font-size:13px; color:var(--dim); margin-top:6px; }
+
+.demo-row{ display:flex; align-items:center; gap:14px; margin:0 0 12px; flex-wrap:wrap; }
+.demo-row:last-child{ margin-bottom:0; }
+.demo-label{ font-size:14px; font-weight:600; color:var(--mut); width:72px; flex:none; }
+#ageInput{
+  font:inherit; font-size:15px; color:var(--ink);
+  background:var(--bg); border:1px solid var(--rule-2); border-radius:5px; padding:7px 10px; width:90px;
+}
+#ageInput:focus-visible{ outline:2px solid var(--acc); outline-offset:1px; }
+.demo-choices{ display:flex; gap:7px; flex-wrap:wrap; }
+.chip{
+  appearance:none; -webkit-appearance:none; font:inherit; font-size:14px;
+  background:var(--bg); border:1px solid var(--rule-2); border-radius:16px; color:var(--mut);
+  padding:6px 13px; cursor:pointer; transition:border-color .12s,color .12s,background .12s;
+}
+.chip:hover{ border-color:var(--acc-dim); color:var(--ink); }
+.chip.on{ background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
+.chip:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+
+/* ---------- radar / spider chart ---------- */
+.radar-wrap{ margin:40px 0 6px; }
+.radar-title{ font-size:16px; font-weight:600; color:var(--ink); margin:0 0 2px; }
+.radar-sub{ font-size:14.5px; color:var(--mut); margin:0 0 14px; max-width:56ch; }
+.radar-figure{ position:relative; max-width:540px; }
+.radar-figure svg{ display:block; width:100%; height:auto; }
+.radar-axis-label{ font-family:var(--sans); font-size:11.5px; fill:var(--mut); }
+.radar-vertex{ cursor:pointer; }
+.radar-vertex:focus-visible{ outline:2px solid var(--acc); outline-offset:2px; }
+.radar-legend{ display:flex; gap:20px; flex-wrap:wrap; justify-content:flex-start; margin-top:12px; font-size:13.5px; color:var(--mut); }
+.radar-legend .lg{ display:flex; align-items:center; gap:7px; }
+.radar-legend .sw{ width:11px; height:11px; border-radius:3px; flex:none; }
+.radar-caption{ font-size:13px; color:var(--faint); margin-top:6px; max-width:60ch; }
+.radar-tooltip{
+  position:absolute; pointer-events:none; z-index:5;
+  background:var(--ink); color:var(--bg); font-family:var(--sans);
+  font-size:11px; line-height:1.6; padding:8px 10px; border-radius:6px;
+  transform:translate(-50%,-100%); white-space:nowrap; opacity:0; transition:opacity .1s;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.radar-tooltip.show{ opacity:1; }
+.radar-tooltip b{ font-weight:600; }
+
+.accordion-body{ padding:2px 0 20px 26px; }
+.method{ margin-top:28px; }
+.accordion-body p{ font-size:13.5px; line-height:1.75; color:var(--mut); max-width:64ch; margin:0 0 14px; }
+.accordion-body p:last-child{ margin-bottom:4px; }
+.accordion-body b{ color:var(--ink); font-weight:600; }
+.accordion-body a{ color:var(--acc); border-bottom:1px solid rgba(47,93,79,.3); }
+.trait-table{ width:100%; border-collapse:collapse; font-size:12.5px; margin:4px 0 18px; }
+.trait-table th,.trait-table td{ text-align:left; padding:6px 10px 6px 0; border-bottom:1px solid var(--rule); color:var(--mut); }
+.trait-table th{ font-family:var(--sans); color:var(--dim); font-weight:500;  font-size:13px;  }
+.trait-table td:first-child{ color:var(--ink); }
+.trait-table td.num,.trait-table th.num{ font-family:var(--sans); font-variant-numeric:tabular-nums; text-align:right; padding-right:0; }
+
+.actions{ display:flex; gap:12px; flex-wrap:wrap; padding:26px 0 4px; }
+
+@media (max-width:420px){
+  .cell label{ height:30px; font-size:11px; }
+  .scale .cells{ gap:3px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="site-head">
+    <a class="name" href="index.html">Marius Leckelt</a>
+    <nav aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="index.html#research">Research</a>
+      <a href="index.html#press">Press</a>
+      <a href="millionaire-quiz.html" aria-current="page">Quiz</a>
+      <a href="index.html#contact">Contact</a>
+      <span class="place">Zürich</span>
+    </nav>
+  </header>
+
+  <section class="hero grid" aria-label="Introduction">
+    <div class="lbl">
+      <span>Personality quiz</span>
+      <span>Millionaire personality index</span>
+    </div>
+    <div class="body">
+      <h1>How close is your personality to the average millionaire’s?</h1>
+      <p class="sub">
+        Answer the same items as the participants in my two published studies of
+        millionaires — one comparing self-made and inherited millionaires with the general
+        population, one comparing millionaires’ actual and stereotyped personality
+        profiles — and see how your profile compares.
+      </p>
+    </div>
+  </section>
+
+  <section class="path grid" aria-label="About this quiz">
+    <div class="lbl"><h2>About</h2></div>
+    <div class="body path-cols">
+      <div>
+        <h3>Based on</h3>
+        <p>Leckelt et al. (2022) and Leckelt et al. (2019) — full citations come with your result.</p>
+      </div>
+      <div>
+        <h3>Takes</h3>
+        <p>About five minutes: 29 short statements.</p>
+      </div>
+      <div>
+        <h3>Privacy</h3>
+        <p>Nothing you answer leaves your browser — it’s arithmetic, run locally. No server, no tracking.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="quiz">
+    <section class="sec grid" aria-labelledby="about-you">
+      <div class="lbl">
+        <h2 id="about-you">About you</h2>
+        <span class="aside">Optional</span>
+      </div>
+      <div class="body">
+        <p class="note">
+          Six of the nine traits have published age- and gender-adjusted norms. Answer both
+          and the comparison uses the norm for your age band and gender instead of the overall
+          average — a fairer baseline, since millionaires in these studies skew older and male.
+          Leave either blank and everything falls back to the overall average.
+        </p>
+        <div class="demo-row">
+          <label class="demo-label" for="ageInput">Age</label>
+          <input type="number" id="ageInput" min="16" max="110" placeholder="e.g. 34" inputmode="numeric">
+        </div>
+        <div class="demo-row">
+          <span class="demo-label">Gender</span>
+          <div class="demo-choices" id="genderChoices">
+            <button type="button" class="chip" data-gender="0">Female</button>
+            <button type="button" class="chip" data-gender="1">Male</button>
+            <button type="button" class="chip on" data-gender="">Prefer not to say</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec grid" aria-labelledby="questions">
+      <div class="lbl">
+        <h2 id="questions">Questions</h2>
+        <span class="aside" id="progressCount">0 / 29</span>
+      </div>
+      <div class="body">
+        <div id="itemsHost"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="sec grid" id="results" aria-labelledby="result-head">
+    <div class="lbl"><h2 id="result-head">Your result</h2></div>
+    <div class="body">
+        <div class="score-panel">
+          <div class="score-num"><span id="scoreValue">—</span><span class="max">/100</span></div>
+          <div class="score-meta">
+            <p class="score-label" id="scoreLabel">—</p>
+            <p class="score-sub" id="scoreSub">—</p>
+            <p class="score-sub" id="scoreDemo" style="display:none;margin-top:6px;"></p>
+          </div>
+        </div>
+
+        <div class="gauge">
+          <div class="fill" id="gaugeFill"></div>
+          <div class="mid"></div>
+        </div>
+        <div class="gauge-caps">
+          <span>General population average</span>
+          <span>Millionaire average</span>
+        </div>
+
+        <div class="radar-wrap">
+          <h3 class="radar-title">Your profile, trait by trait</h3>
+          <p class="radar-sub">
+            Each spoke is standardized in population standard-deviation units, so traits
+            measured on different scales stay comparable. Outward always means "more toward
+            the millionaire direction" — Neuroticism is flipped, since millionaires score
+            <em>lower</em> on it. Hover or focus a point for the raw numbers.
+          </p>
+          <div class="radar-figure" id="radarFigure">
+            <div class="radar-tooltip" id="radarTooltip"></div>
+          </div>
+          <div class="radar-legend">
+            <span class="lg"><span class="sw" style="background:#1D8055"></span>You</span>
+            <span class="lg"><span class="sw" style="background:#B5651D"></span>Millionaire average</span>
+            <span class="lg"><span class="sw" style="background:var(--dim);border-radius:50%"></span>General-population average</span>
+          </div>
+          <p class="radar-caption">Values reflect the demographic-adjusted baseline above where available.</p>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="retakeBtn" type="button">Retake the quiz</button>
+          <a class="btn" href="index.html">Back to the homepage</a>
+        </div>
+
+        <div class="accordion-stack method">
+          <details class="accordion">
+            <summary><span class="badge">How this is calculated</span></summary>
+            <div class="accordion-body">
+              <p>
+                Each of the nine traits below has a published <b>millionaire mean</b> and
+                <b>general-population mean</b> from the two studies, plus a population standard
+                deviation. Your score on each trait is converted to a z-score against the
+                population, then expressed as a fraction of the way from the population mean
+                toward the millionaire mean. Traits where millionaires and the general population
+                differ more strongly (a larger effect size) count more toward the total — a trait
+                with almost no real difference, like Agreeableness, barely moves the needle. The
+                final number is a weighted average of that "fraction of the way there," rescaled
+                so 50 = exactly average and 100 = exactly the millionaire mean profile.
+              </p>
+              <table class="trait-table">
+                <thead><tr><th>Trait</th><th class="num">You</th><th class="num">Population</th><th class="num">Millionaires</th><th class="num">Effect</th></tr></thead>
+                <tbody id="traitTableBody"></tbody>
+              </table>
+              <p>
+                <b>Age/gender adjustment.</b> For Neuroticism, Extraversion, Openness,
+                Agreeableness, Conscientiousness, and Risk tolerance, Table 2 of the 2022
+                paper gives an OLS model predicting each trait from sample (millionaire vs.
+                general population), gender, three age bands, and their interactions. When
+                you provide both age and gender, "Population" above is that model's predicted
+                score for someone with your age band and gender (education held at its
+                reference level, since it wasn't asked); "Millionaires" is the same prediction
+                plus the model's millionaire coefficient, which the model treats as constant
+                across age and gender. Narcissism and locus of control aren't adjustable this
+                way — the source paper for those two traits doesn't publish age/gender-specific
+                norms, so those three rows always use the plain overall average. Either way,
+                the standard deviation used to standardize each trait is the same one for
+                everyone; a fully age/gender-specific standard deviation isn't published.
+              </p>
+              <p>
+                <b>Sources.</b> Big Five and risk tolerance: population and millionaire means
+                pooled (weighted by subgroup size) from Table 1 and Table 3 of Leckelt, König,
+                Richter, Back &amp; Schröder (2022), <i>The personality traits of self-made and
+                inherited millionaires</i>, <i>Humanities and Social Sciences Communications</i>,
+                9, 94 — <a href="https://doi.org/10.1057/s41599-022-01099-3" target="_blank" rel="noopener">doi.org/10.1057/s41599-022-01099-3</a>
+                (N = 1,125 millionaires, N = 23,721 general population; risk-tolerance standard
+                deviation approximated from the paper's reported effect size). Narcissism and
+                locus of control: raw means and standard deviations from Table 1 of Leckelt,
+                Richter, Schröder, Küfner, Grabka &amp; Back (2019), <i>The rich are different:
+                Unravelling the perceived and self-reported personality profiles of high-net-worth
+                individuals</i>, <i>British Journal of Psychology</i>, 110(4), 769–789 —
+                <a href="https://doi.org/10.1111/bjop.12360" target="_blank" rel="noopener">doi.org/10.1111/bjop.12360</a>
+                (N = 130 real high-net-worth individuals, N = 22,981 general population). Items:
+                BFI-S (Gerlitz &amp; Schupp, 2005), NARQ-S (Leckelt et al., 2018), and the SOEP
+                locus-of-control scale (Specht, Egloff &amp; Schmukle, 2013).
+              </p>
+              <p>
+                <b>What this isn't.</b> This is a for-fun reflection tool, not a diagnostic or a
+                wealth predictor. The underlying group differences are modest on average
+                (Cohen's d mostly 0.2–0.6) and describe how two specific German samples compared
+                on the survey day — not what makes any individual rich, and not a claim that
+                personality causes wealth rather than the other way around.
+              </p>
+            </div>
+          </details>
+        </div>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    <span><a href="index.html">© 2026 Marius Leckelt · Zürich</a></span>
+    <span>Not diagnostic. For reflection only.</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+
+  // ---------------------------------------------------------------
+  // Trait reference values (see "How this is calculated" for sources)
+  // ---------------------------------------------------------------
+  var TRAITS = {
+    N:    { name:'Neuroticism',             scale:[1,7],  popMean:3.595, richMean:2.933, popSD:1.22 },
+    E:    { name:'Extraversion',            scale:[1,7],  popMean:4.922, richMean:5.182, popSD:1.13 },
+    O:    { name:'Openness',                scale:[1,7],  popMean:4.592, richMean:4.983, popSD:1.06 },
+    A:    { name:'Agreeableness',           scale:[1,7],  popMean:5.422, richMean:5.427, popSD:0.96 },
+    C:    { name:'Conscientiousness',       scale:[1,7],  popMean:5.785, richMean:5.986, popSD:0.92 },
+    RISK: { name:'Risk tolerance',          scale:[0,10], popMean:5.116, richMean:6.594, popSD:2.35 },
+    ADM:  { name:'Narcissistic admiration', scale:[1,6],  popMean:2.04,  richMean:2.51,  popSD:1.09 },
+    RIV:  { name:'Narcissistic rivalry',    scale:[1,6],  popMean:1.74,  richMean:1.93,  popSD:0.81 },
+    LOC:  { name:'Locus of control',        scale:[1,7],  popMean:4.83,  richMean:5.20,  popSD:0.93 }
+  };
+
+  // ---------------------------------------------------------------
+  // Age/gender-adjusted norms, from Table 2 of the 2022 paper (OLS
+  // regressions predicting each trait from sample, gender, age band,
+  // and gender x age band; education omitted since it isn't asked
+  // here, i.e. held at its reference level). Only available for the
+  // six traits the 2022 paper measured — narcissism and locus of
+  // control (from the 2019 paper) have no published age/gender norms,
+  // so they always use the plain overall average.
+  // gender: 0 = female, 1 = male. ageCat: 1 = <40, 2 = 40-60, 3 = 60+.
+  // ---------------------------------------------------------------
+  var DEMO_COEF = {
+    RISK: { constant:5.082, sample:1.352, gender:0.790, age2:-0.490, age3:-0.766, genderAge2:0.070, genderAge3:0.012 },
+    N:    { constant:4.079, sample:-0.401, gender:-0.587, age2:-0.210, age3:-0.206, genderAge2:0.104, genderAge3:0.104 },
+    O:    { constant:4.539, sample:0.358, gender:-0.130, age2:-0.079, age3:-0.082, genderAge2:-0.022, genderAge3:-0.060 },
+    E:    { constant:5.074, sample:0.339, gender:-0.200, age2:0.001, age3:-0.173, genderAge2:-0.066, genderAge3:-0.018 },
+    C:    { constant:5.710, sample:0.145, gender:-0.266, age2:0.318, age3:0.209, genderAge2:0.088, genderAge3:0.095 },
+    A:    { constant:5.474, sample:-0.003, gender:-0.230, age2:0.039, age3:0.179, genderAge2:-0.038, genderAge3:-0.090 }
+  };
+
+  function ageToCategory(age){
+    if (age < 40) return 1;
+    if (age <= 60) return 2;
+    return 3;
+  }
+
+  // Returns {gender, ageCat} if both were provided, otherwise null
+  // (meaning: fall back to the plain overall average everywhere).
+  function getDemographics(){
+    var ageVal = document.getElementById('ageInput').value;
+    var genderBtn = document.querySelector('.chip.on');
+    var genderVal = genderBtn ? genderBtn.dataset.gender : '';
+    if (ageVal === '' || genderVal === '') return null;
+    var age = parseFloat(ageVal);
+    if (!isFinite(age) || age < 16 || age > 110) return null;
+    return { gender: Number(genderVal), ageCat: ageToCategory(age) };
+  }
+
+  // Adjusted {popMean, richMean} for one trait, or the unadjusted
+  // published values when demographics aren't available/applicable.
+  function getMeansFor(key, demo){
+    var t = TRAITS[key];
+    var coef = DEMO_COEF[key];
+    if (!demo || !coef) return { popMean: t.popMean, richMean: t.richMean };
+    var a2 = demo.ageCat === 2 ? 1 : 0;
+    var a3 = demo.ageCat === 3 ? 1 : 0;
+    var pop = coef.constant
+      + coef.gender * demo.gender
+      + coef.age2 * a2
+      + coef.age3 * a3
+      + coef.genderAge2 * demo.gender * a2
+      + coef.genderAge3 * demo.gender * a3;
+    return { popMean: pop, richMean: pop + coef.sample };
+  }
+
+  // ---------------------------------------------------------------
+  // Items (exact wording from BFI-S, NARQ-S, and the SOEP LOC scale)
+  // ---------------------------------------------------------------
+  var BFI_STEM = 'I am someone who…';
+  var BFI_CAPS = ['Does not apply at all','Applies completely'];
+  var BFI = [
+    { id:'N1',  trait:'N', text:'Worries a lot', rev:false },
+    { id:'E1',  trait:'E', text:'Is talkative', rev:false },
+    { id:'O1',  trait:'O', text:'Is original, comes up with new ideas', rev:false },
+    { id:'A1',  trait:'A', text:'Is sometimes rude to others', rev:true },
+    { id:'C1',  trait:'C', text:'Does a thorough job', rev:false },
+    { id:'N2',  trait:'N', text:'Gets nervous easily', rev:false },
+    { id:'E2',  trait:'E', text:'Is outgoing, sociable', rev:false },
+    { id:'O2',  trait:'O', text:'Values artistic, aesthetic experiences', rev:false },
+    { id:'A2',  trait:'A', text:'Has a forgiving nature', rev:false },
+    { id:'C2',  trait:'C', text:'Tends to be lazy', rev:true },
+    { id:'N3',  trait:'N', text:'Remains calm in tense situations', rev:true },
+    { id:'E3',  trait:'E', text:'Is reserved', rev:true },
+    { id:'O3',  trait:'O', text:'Has an active imagination', rev:false },
+    { id:'A3',  trait:'A', text:'Is considerate and kind to almost everyone', rev:false },
+    { id:'C3',  trait:'C', text:'Does things efficiently', rev:false }
+  ];
+  var RISK_ITEM = {
+    id:'RISK', trait:'RISK',
+    stem:'All in all',
+    text:'How willing are you to take risks, in general?',
+    scale:[0,10], caps:['Not at all willing to take risks','Very willing to take risks'], rev:false
+  };
+  var NARQ_STEM = 'Please rate how much you agree…';
+  var NARQ_CAPS = ['Do not agree at all','Agree completely'];
+  var NARQ = [
+    { id:'ADM1', trait:'ADM', text:'I deserve to be seen as a great personality.', rev:false },
+    { id:'RIV1', trait:'RIV', text:'I react annoyed if another person steals the show from me.', rev:false },
+    { id:'ADM2', trait:'ADM', text:'Being a very special person gives me a lot of strength.', rev:false },
+    { id:'RIV2', trait:'RIV', text:'I want my rivals to fail.', rev:false },
+    { id:'ADM3', trait:'ADM', text:'I manage to be the center of attention with my outstanding contributions.', rev:false },
+    { id:'RIV3', trait:'RIV', text:'Most people are somehow losers.', rev:false }
+  ];
+  var LOC_STEM = 'Please rate how much you agree…';
+  var LOC_CAPS = ['Do not agree at all','Agree completely'];
+  var LOC = [
+    { id:'LOC1', trait:'LOC', text:'How my life goes depends on myself.', rev:false },
+    { id:'LOC2', trait:'LOC', text:'Compared to others, I have not achieved what I deserved.', rev:true },
+    { id:'LOC3', trait:'LOC', text:'What one achieves in life is mainly a question of luck or fate.', rev:true },
+    { id:'LOC4', trait:'LOC', text:'I often have the experience that others make decisions regarding my life.', rev:true },
+    { id:'LOC5', trait:'LOC', text:'When I encounter difficulties in life, I have doubts about my abilities.', rev:true },
+    { id:'LOC6', trait:'LOC', text:'The opportunities I have in life are determined by social conditions.', rev:true },
+    { id:'LOC7', trait:'LOC', text:'I have little control over things that happen in my life.', rev:true }
+  ];
+
+  var ALL_ITEMS = []
+    .concat(BFI.map(function(it){ return Object.assign({}, it, { scale:[1,7], caps:BFI_CAPS, stem:BFI_STEM }); }))
+    .concat([RISK_ITEM])
+    .concat(NARQ.map(function(it){ return Object.assign({}, it, { scale:[1,6], caps:NARQ_CAPS, stem:NARQ_STEM }); }))
+    .concat(LOC.map(function(it){ return Object.assign({}, it, { scale:[1,7], caps:LOC_CAPS, stem:LOC_STEM }); }));
+
+  var answers = {};
+
+  // ---------------------------------------------------------------
+  // Render items
+  // ---------------------------------------------------------------
+  var host = document.getElementById('itemsHost');
+  var frag = document.createDocumentFragment();
+
+  ALL_ITEMS.forEach(function(item, idx){
+    var fs = document.createElement('fieldset');
+    fs.className = 'item';
+
+    var legend = document.createElement('legend');
+    legend.innerHTML = '<div class="stem">' + (idx+1) + ' / ' + ALL_ITEMS.length + ' · ' + item.stem + '</div>' +
+                        '<div class="text">' + item.text + '</div>';
+    fs.appendChild(legend);
+
+    var scale = document.createElement('div');
+    scale.className = 'scale';
+
+    var cells = document.createElement('div');
+    cells.className = 'cells';
+    var min = item.scale[0], max = item.scale[1];
+    for (var v = min; v <= max; v++){
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      var inputId = 'q-' + item.id + '-' + v;
+      var input = document.createElement('input');
+      input.type = 'radio'; input.name = 'q-' + item.id; input.value = v; input.id = inputId;
+      var label = document.createElement('label');
+      label.setAttribute('for', inputId);
+      label.textContent = v;
+      cell.appendChild(input); cell.appendChild(label);
+      cells.appendChild(cell);
+
+      input.addEventListener('change', function(itemRef, val){
+        return function(){
+          answers[itemRef.id] = val;
+          updateProgress();
+        };
+      }(item, v));
+    }
+    scale.appendChild(cells);
+
+    var caps = document.createElement('div');
+    caps.className = 'caps';
+    caps.innerHTML = '<span>' + item.caps[0] + '</span><span>' + item.caps[1] + '</span>';
+    scale.appendChild(caps);
+
+    fs.appendChild(scale);
+    frag.appendChild(fs);
+  });
+  host.appendChild(frag);
+
+  // ---------------------------------------------------------------
+  // Gender chips (single-select toggle group)
+  // ---------------------------------------------------------------
+  document.querySelectorAll('#genderChoices .chip').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#genderChoices .chip').forEach(function(b){ b.classList.remove('on'); });
+      btn.classList.add('on');
+    });
+  });
+
+  // ---------------------------------------------------------------
+  // Progress bar
+  // ---------------------------------------------------------------
+  var progressCount = document.getElementById('progressCount');
+  var barFill = document.getElementById('barFill');
+  var seeScoreBtn = document.getElementById('seeScoreBtn');
+
+  function updateProgress(){
+    var n = Object.keys(answers).length;
+    var total = ALL_ITEMS.length;
+    progressCount.textContent = n + ' / ' + total;
+    if (barFill) barFill.style.width = (100*n/total) + '%';
+    if (seeScoreBtn) seeScoreBtn.disabled = (n < total);
+  }
+
+  // ---------------------------------------------------------------
+  // Sticky bar
+  // ---------------------------------------------------------------
+  var sticky = document.createElement('div');
+  sticky.className = 'stickybar';
+  sticky.id = 'stickybar';
+  sticky.innerHTML =
+    '<div class="track"><div class="fill" id="barFill"></div></div>' +
+    '<div class="row2">' +
+      '<span class="status"><b id="progressCount2">0 / ' + ALL_ITEMS.length + '</b> answered</span>' +
+      '<button class="btn primary" id="seeScoreBtn" type="button" disabled>See my score →</button>' +
+    '</div>';
+  document.body.appendChild(sticky);
+  seeScoreBtn = document.getElementById('seeScoreBtn');
+  barFill = document.getElementById('barFill');
+  var progressCount2 = document.getElementById('progressCount2');
+
+  var origUpdate = updateProgress;
+  updateProgress = function(){
+    origUpdate();
+    var n = Object.keys(answers).length;
+    progressCount2.textContent = n + ' / ' + ALL_ITEMS.length;
+  };
+  updateProgress();
+
+  // ---------------------------------------------------------------
+  // Scoring
+  // ---------------------------------------------------------------
+  function recode(raw, item){
+    if (!item.rev) return raw;
+    return (item.scale[0] + item.scale[1]) - raw;
+  }
+
+  function traitRawScore(key){
+    var items = ALL_ITEMS.filter(function(it){ return it.trait === key; });
+    var sum = 0;
+    items.forEach(function(it){ sum += recode(answers[it.id], it); });
+    return sum / items.length;
+  }
+
+  function computeScore(){
+    var demo = getDemographics();
+    var sumWeighted = 0, sumWeights = 0;
+    var rows = [];
+    Object.keys(TRAITS).forEach(function(key){
+      var t = TRAITS[key];
+      var means = getMeansFor(key, demo);
+      var raw = traitRawScore(key);
+      var d = (means.richMean - means.popMean) / t.popSD;
+      var z = (raw - means.popMean) / t.popSD;
+      var s = Math.max(-2.5, Math.min(2.5, Math.sign(d || 1) * z));
+      sumWeighted += Math.sign(d) * z;
+      sumWeights += Math.abs(d);
+      rows.push({
+        key:key, name:t.name, raw:raw,
+        popMean:means.popMean, richMean:means.richMean, popSD:t.popSD,
+        d:d, s:s, adjusted: !!(demo && DEMO_COEF[key])
+      });
+    });
+    var overallT = sumWeighted / sumWeights;
+    var score = Math.max(0, Math.min(100, 50 + 50*overallT));
+    return { score:score, rows:rows, demo:demo };
+  }
+
+  function labelFor(score){
+    if (score >= 82) return ['Closely matches the millionaire profile', 'On these nine traits, your profile sits very close to the average of the millionaires surveyed in both studies.'];
+    if (score >= 64) return ['Leans toward the millionaire profile', 'More often than not, your answers land on the millionaire side of the population average.'];
+    if (score >= 37) return ['Close to the population average', 'Your profile sits roughly between the general-population and millionaire averages.'];
+    if (score >= 18) return ['Leans away from the millionaire profile', 'More often than not, your answers land on the opposite side of the population average from millionaires.'];
+    return ['Far from the millionaire profile', 'On these nine traits, your profile sits well outside where millionaires in these studies tended to cluster.'];
+  }
+
+  // ---------------------------------------------------------------
+  // Trait table (methodology) — built once results are computed,
+  // so it can show the visitor's own score alongside the norms.
+  // ---------------------------------------------------------------
+  function renderTraitTable(rows){
+    var tbody = document.getElementById('traitTableBody');
+    tbody.innerHTML = '';
+    rows.forEach(function(r){
+      var tr = document.createElement('tr');
+      var name = r.name + (r.adjusted ? ' <span style="color:var(--acc);font-size:10px;">(adj.)</span>' : '');
+      tr.innerHTML = '<td>' + name + '</td>' +
+                      '<td class="num">' + r.raw.toFixed(2) + '</td>' +
+                      '<td class="num">' + r.popMean.toFixed(2) + '</td>' +
+                      '<td class="num">' + r.richMean.toFixed(2) + '</td>' +
+                      '<td class="num">d=' + r.d.toFixed(2) + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Radar / spider chart — 9 axes, standardized to population SD
+  // units, each axis oriented so "outward" = more millionaire-like.
+  // Population average is always the ring at half radius by
+  // construction (s = 0 there); the millionaire polygon and your
+  // polygon sit relative to it.
+  // ---------------------------------------------------------------
+  function buildRadar(rows){
+    var host = document.getElementById('radarFigure');
+    var tooltip = document.getElementById('radarTooltip');
+    var W = 500, H = 370, cx = W/2, cy = H/2, R = 120;
+    var n = rows.length;
+    var domainMin = -2.5, domainMax = 2.5;
+
+    function angleFor(i){ return -Math.PI/2 + i * (2*Math.PI/n); }
+    function radiusFor(s){
+      var clamped = Math.max(domainMin, Math.min(domainMax, s));
+      return R * (clamped - domainMin) / (domainMax - domainMin);
+    }
+    function pointFor(i, s){
+      var a = angleFor(i), r = radiusFor(s);
+      return [ +(cx + r*Math.cos(a)).toFixed(2), +(cy + r*Math.sin(a)).toFixed(2) ];
+    }
+    function polygon(values){
+      return values.map(function(s, i){ return pointFor(i, s).join(','); }).join(' ');
+    }
+
+    var ringRadii = [0, 0.25, 0.5, 0.75, 1].map(function(f){ return R*f; });
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Radar chart comparing your personality profile to the millionaire and general-population averages across nine traits">';
+
+    // background rings (population ring, at 0.5, drawn slightly stronger)
+    ringRadii.forEach(function(r, idx){
+      var isPop = idx === 2;
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r.toFixed(2) + '" fill="none" ' +
+             'stroke="' + (isPop ? 'var(--dim)' : 'var(--rule)') + '" stroke-width="' + (isPop ? 1.5 : 1) + '"></circle>';
+    });
+
+    // spokes
+    rows.forEach(function(r, i){
+      var p = pointFor(i, domainMax);
+      svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" stroke="var(--rule)" stroke-width="1"></line>';
+    });
+
+    // millionaire polygon (amber, dashed) — by construction this is |d|,
+    // since flipping each axis to point toward the millionaire direction
+    // makes the millionaire mean's own deviation always positive/outward.
+    var richPts = rows.map(function(r){ return Math.max(domainMin, Math.min(domainMax, Math.abs(r.d))); });
+    svg += '<polygon points="' + polygon(richPts) + '" fill="#B5651D" fill-opacity="0.10" stroke="#B5651D" stroke-width="2" stroke-dasharray="5,4"></polygon>';
+
+    // your polygon (green, solid)
+    var yourPts = rows.map(function(r){ return r.s; });
+    svg += '<polygon points="' + polygon(yourPts) + '" fill="#1D8055" fill-opacity="0.14" stroke="#1D8055" stroke-width="2"></polygon>';
+
+    // axis labels
+    rows.forEach(function(r, i){
+      var a = angleFor(i);
+      var lp = [ +(cx + R*1.13*Math.cos(a)).toFixed(2), +(cy + R*1.13*Math.sin(a)).toFixed(2) ];
+      var cos = Math.cos(a), sin = Math.sin(a);
+      var anchor = cos > 0.3 ? 'start' : (cos < -0.3 ? 'end' : 'middle');
+      var dy = sin > 0.3 ? '0.9em' : (sin < -0.3 ? '-0.3em' : '0.3em');
+      var label = r.name.replace('Neuroticism', 'Neuroticism (lower)').replace('Narcissistic ', 'Narc. ');
+      svg += '<text class="radar-axis-label" x="' + lp[0] + '" y="' + lp[1] + '" text-anchor="' + anchor + '" dy="' + dy + '">' + label + '</text>';
+    });
+
+    // vertex dots (millionaire + yours), each with a hit target for hover/focus
+    rows.forEach(function(r, i){
+      var rp = pointFor(i, richPts[i]);
+      var yp = pointFor(i, yourPts[i]);
+      svg += '<circle class="radar-vertex" tabindex="0" data-i="' + i + '" data-series="rich" cx="' + rp[0] + '" cy="' + rp[1] + '" r="10" fill="transparent"></circle>';
+      svg += '<circle cx="' + rp[0] + '" cy="' + rp[1] + '" r="4" fill="#B5651D" stroke="var(--bg)" stroke-width="2" pointer-events="none"></circle>';
+      svg += '<circle class="radar-vertex" tabindex="0" data-i="' + i + '" data-series="you" cx="' + yp[0] + '" cy="' + yp[1] + '" r="10" fill="transparent"></circle>';
+      svg += '<circle cx="' + yp[0] + '" cy="' + yp[1] + '" r="4.5" fill="#1D8055" stroke="var(--bg)" stroke-width="2" pointer-events="none"></circle>';
+    });
+
+    svg += '</svg>';
+    host.innerHTML = svg + '<div class="radar-tooltip" id="radarTooltip"></div>';
+    tooltip = document.getElementById('radarTooltip');
+
+    function showTooltip(el){
+      var i = Number(el.dataset.i), series = el.dataset.series, r = rows[i];
+      var label = series === 'you'
+        ? '<b>You</b> — ' + r.raw.toFixed(2)
+        : '<b>Millionaire avg.</b> — ' + r.richMean.toFixed(2);
+      tooltip.innerHTML = '<b>' + r.name + '</b><br>' + label + '<br>Population avg. — ' + r.popMean.toFixed(2);
+      var hostRect = host.getBoundingClientRect();
+      var elRect = el.getBoundingClientRect();
+      tooltip.style.left = (elRect.left - hostRect.left + elRect.width/2) + 'px';
+      tooltip.style.top = (elRect.top - hostRect.top - 6) + 'px';
+      tooltip.classList.add('show');
+    }
+    function hideTooltip(){ tooltip.classList.remove('show'); }
+
+    host.querySelectorAll('.radar-vertex').forEach(function(el){
+      el.addEventListener('pointerenter', function(){ showTooltip(el); });
+      el.addEventListener('pointerleave', hideTooltip);
+      el.addEventListener('focus', function(){ showTooltip(el); });
+      el.addEventListener('blur', hideTooltip);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Reveal results
+  // ---------------------------------------------------------------
+  var quizSection = document.getElementById('quiz');
+  var resultsSection = document.getElementById('results');
+  var scoreValue = document.getElementById('scoreValue');
+  var scoreLabel = document.getElementById('scoreLabel');
+  var scoreSub = document.getElementById('scoreSub');
+  var gaugeFill = document.getElementById('gaugeFill');
+
+  seeScoreBtn.addEventListener('click', function(){
+    var result = computeScore();
+    var rounded = Math.round(result.score);
+    scoreValue.textContent = rounded;
+    var lbl = labelFor(rounded);
+    scoreLabel.textContent = lbl[0];
+    scoreSub.textContent = lbl[1];
+    var scoreDemo = document.getElementById('scoreDemo');
+    if (result.demo){
+      var ageBandText = ['', 'under 40', '40–60', 'over 60'][result.demo.ageCat];
+      var genderText = result.demo.gender === 1 ? 'male' : 'female';
+      scoreDemo.textContent = 'Adjusted for ' + genderText + ', ' + ageBandText + ' — six of nine traits use your age/gender norm.';
+      scoreDemo.style.display = 'block';
+    } else {
+      scoreDemo.style.display = 'none';
+    }
+    gaugeFill.style.width = rounded + '%';
+    renderTraitTable(result.rows);
+    buildRadar(result.rows);
+
+    quizSection.classList.add('hide');
+    sticky.classList.add('hide');
+    resultsSection.classList.add('show');
+    resultsSection.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  document.getElementById('retakeBtn').addEventListener('click', function(){
+    resultsSection.classList.remove('show');
+    quizSection.classList.remove('hide');
+    sticky.classList.remove('hide');
+    quizSection.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+})();
+</script>
+</body>
+</html>

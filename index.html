@@ -1,583 +1,425 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ML</title>
-    
-    <link rel="icon" href="https://fav.farm/💾"> 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marius Leckelt</title>
+<meta name="description" content="Marius Leckelt — helping AI labs, big tech, and enterprises train and evaluate models on complex, long-horizon tasks. Previously a researcher in personality psychology and psychometrics.">
+<link rel="icon" href="https://fav.farm/%F0%9F%94%AC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="static/site.css">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    
-    <style>
-        :root{
-            --bg: #04040a;           /* almost black / deep city night */
-            --card-bg: rgba(4,4,10,0.78);
-            --text: #E9F8FF;         /* pale cyan */
-            --neon-cyan: #00F0FF;
-            --neon-magenta: #FF3DAB;
-            --neon-purple: #9B5CFF;
-            --muted: #98A0B3;
-            --line: rgba(255,255,255,0.04);
-            --glow: rgba(0,240,255,0.18);
-            }
+<style>
+/* homepage-only; shared styles live in static/site.css */
+.try.has-mini{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px 32px; align-items:center; }
+.mini-link{ display:block; line-height:0; }
+.mini-radar{ display:block; width:112px; height:112px; transition:transform .25s ease; }
+.mini-link:hover .mini-radar{ transform:rotate(-8deg) scale(1.04); }
+@media (max-width:560px){ .mini-radar{ width:84px; height:84px; } }
+/* scholar metrics: quiet, one line */
+.metrics{
+  display:flex; align-items:flex-end; gap:clamp(20px,3vw,40px); flex-wrap:wrap;
+  margin:34px 0 0; padding-block:16px; border-block:1px solid var(--rule);
+  font-variant-numeric:tabular-nums;
+}
+.metric b{ display:block; font-size:22px; font-weight:500; letter-spacing:-.01em; line-height:1.15; }
+.metric span{ font-size:13.5px; color:var(--mut); }
+.metric-trend{ display:flex; flex-direction:column; gap:4px; margin-left:auto; text-align:right; }
+.metric-trend svg{ display:block; margin-left:auto; }
+.metric-trend span{ font-size:12.5px; color:var(--faint); }
+@media (max-width:560px){ .metric-trend{ margin-left:0; text-align:left; } .metric-trend svg{ margin-left:0; } }
 
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow-x: hidden;
-        }
+/* selected publications */
+.subhead{ margin:44px 0 6px; font-size:14px; font-weight:600; color:var(--mut); }
+ol.selected{ list-style:none; margin:0; padding:0; }
+ol.selected li{
+  display:grid; grid-template-columns:64px minmax(0,1fr); gap:16px;
+  padding-block:15px; border-bottom:1px solid var(--rule);
+}
+ol.selected .yr{ font-size:14.5px; color:var(--faint); font-variant-numeric:tabular-nums; padding-top:1px; }
+ol.selected .ttl{ font-size:16.5px; font-weight:500; line-height:1.4; letter-spacing:-.005em; max-width:62ch; }
+ol.selected a.ttl:hover{ color:var(--acc); }
+ol.selected .meta{ margin-top:3px; font-size:14px; color:var(--mut); max-width:70ch; }
+ol.selected .meta i{ color:var(--ink-2); }
+@media (max-width:560px){ ol.selected li{ grid-template-columns:1fr; gap:2px; } }
 
-        #canvas-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
-        }
+/* archives: folded by default */
+.archive-toggle{
+  appearance:none; -webkit-appearance:none; background:none; border:0; padding:0;
+  margin-top:26px; cursor:pointer; font:inherit; font-size:15px; font-weight:500; color:var(--ink);
+  display:inline-flex; align-items:baseline; gap:8px;
+}
+.archive-toggle .sign{ display:inline-block; width:12px; color:var(--acc); }
+.archive-toggle .sign::before{ content:"+"; }
+.archive-toggle[aria-expanded="true"] .sign::before{ content:"\2013"; }
+.archive-toggle .n{ color:var(--faint); font-weight:400; font-variant-numeric:tabular-nums; }
+.archive-toggle:hover .t{ color:var(--acc); }
+.archive-body{ display:none; margin-top:14px; }
+.archive-body.open{ display:block; }
 
-        /* Subtle scanline overlay to enhance cyberpunk feel */
-        #canvas-container::after{
-            content: "";
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            background-image: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px);
-            background-size: 100% 3px;
-            mix-blend-mode: overlay;
-            opacity: 0.12;
-        }
+ul.pub-list{ list-style:none; margin:0 0 16px; padding:0 0 0 26px; }
+ul.pub-list li{ margin:0 0 13px; font-size:14.5px; line-height:1.6; color:var(--mut); max-width:78ch; }
+ul.pub-list li b{ color:var(--ink); font-weight:600; }
+ul.pub-list li i{ color:var(--ink-2); }
+ul.pub-list a{ font-size:13px; font-weight:500; color:var(--acc); letter-spacing:.02em; }
+ul.pub-list a:hover{ color:var(--acc-2); }
 
-        .container{
-            max-width: 750px;
-            margin: 80px auto;
-            background: var(--card-bg);
-            padding: 50px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px var(--glow);
-            backdrop-filter: blur(10px) saturate(1.1);
-            position: relative;
-            z-index: 2;
-        }
+/* press */
+.outlets{ margin:20px 0 0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:6px 0; font-size:15.5px; color:var(--ink); max-width:68ch; }
+.outlets li:not(:last-child)::after{ content:"/"; color:var(--rule-2); margin:0 12px; }
+ul.media-list{ list-style:none; margin:0; padding:0; border-top:1px solid var(--rule); }
+ul.media-list li{
+  display:grid; grid-template-columns:120px minmax(0,1fr); gap:16px;
+  padding:12px 0; border-bottom:1px solid var(--rule);
+  font-size:14.5px; line-height:1.6; color:var(--mut);
+}
+@media (max-width:560px){ ul.media-list li{ grid-template-columns:1fr; gap:2px; } }
+.tag{ font-size:13.5px; color:var(--faint); font-variant-numeric:tabular-nums; }
+.media-body{ max-width:74ch; }
+.media-body b{ color:var(--ink); font-weight:600; }
+.media-body a b{ border-bottom:1px solid rgba(47,93,79,.3); }
+.media-body a:hover b{ color:var(--acc); }
 
-        header { border-left: 3px solid var(--neon-magenta); padding-left: 25px; margin-bottom: 40px; }
-        
-        .breadcrumb { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; color: var(--neon-cyan); margin-bottom: 10px; }
-        h1 { font-size: 1.5rem; margin: 0; letter-spacing: -0.02em; }
-        
-        section { margin-top: 40px; }
-        h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
-
-        /* Psychology Easter Egg Tooltip */
-        .psych-term {
-            border-bottom: 1px dashed var(--neon-magenta);
-            cursor: help;
-            position: relative;
-        }
-
-        .psych-term:hover::after {
-            content: attr(data-definition);
-            position: absolute;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(4,4,10,0.95);
-            padding: 12px;
-            border-radius: 6px;
-            width: 220px;
-            font-size: 0.8rem;
-            line-height: 1.4;
-            border: 1px solid var(--neon-magenta);
-            color: var(--text);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            font-family: 'SF Mono', monospace;
-            font-size: 0.85rem;
-        }
-
-        .stat-item { 
-            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
-            padding: 15px; 
-            border-radius: 6px; 
-            border: 1px solid rgba(155,92,255,0.06);
-            color: var(--text);
-        }
-
-        footer {
-            margin-top: 80px;
-            border-top: 1px solid var(--line);
-            padding-top: 30px;
-            font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.8;
-        }
-
-        .footer-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        a { color: var(--neon-cyan); text-decoration: none; font-weight: 500; transition: 0.18s ease; }
-        a:hover { filter: drop-shadow(0 6px 14px rgba(0,240,255,0.12)); transform: translateY(-1px); }
-
-        .cursor { display: inline-block; width: 10px; height: 3px; background: linear-gradient(90deg,var(--neon-cyan),var(--neon-magenta)); box-shadow: 0 6px 20px rgba(155,92,255,0.12); animation: blink 1s steps(2) infinite; margin-left: 5px; }
-        @keyframes blink { 50% { opacity: 0; } }
-    
-        /* Publications + Media */
-        .accordion-stack { display: flex; flex-direction: column; gap: 12px; }
-        details.accordion {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 10px 14px;
-        }
-        details.accordion[open] { border-color: rgba(155,92,255,0.28); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
-        details.accordion summary { cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: center; font-family: 'SF Mono', monospace; }
-        details.accordion summary::-webkit-details-marker { display: none; }
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.04);
-            background: linear-gradient(90deg, rgba(0,240,255,0.12), rgba(255,61,171,0.08));
-            color: var(--neon-cyan);
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .muted { color: var(--muted); font-size: 0.75rem; }
-        ul.pub-list { margin: 12px 0 6px 0; padding-left: 18px; line-height: 1.55; }
-        ul.pub-list li { margin: 10px 0; }
-        ul.pub-list a { font-family: 'SF Mono', monospace; font-size: 0.8rem; }
-
-        ul.media-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-        ul.media-list li {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.06);
-            border-radius: 10px;
-            padding: 12px 14px;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        .tag {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--neon-cyan);
-            border: 1px solid rgba(255,255,255,0.04);
-            background: linear-gradient(90deg, rgba(0,240,255,0.06), rgba(155,92,255,0.04));
-            border-radius: 8px;
-            padding: 3px 8px;
-            white-space: nowrap;
-            margin-top: 2px;
-        }
-        .media-body { line-height: 1.55; }
-
-    
-        /* Jump links */
-        .console-nav{
-            display:flex;
-            gap:16px;
-            flex-wrap:wrap;
-            margin: 18px 0 28px 0;
-            font-family: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 0.9rem;
-        }
-        .console-nav a{
-            color: var(--neon-cyan);
-            text-decoration: none;
-            border: 1px solid rgba(0,240,255,0.18);
-            padding: 6px 10px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.02);
-        }
-        .console-nav a:hover{ filter: brightness(1.12); }
-
-
-        /* Tabs */
-        .tab-section { display: none; }
-        .tab-section.active { display: block; }
-        .console-nav a.active {
-            box-shadow: 0 0 0 1px var(--glow), 0 10px 25px rgba(0,0,0,0.25);
-            background: rgba(0,240,255,0.10);
-        }
-
-        /* Ensure sections can be reached */
-        body { overflow-y: auto; }
+/* contact: one row of marks */
+.icons{ display:flex; gap:10px; flex-wrap:wrap; margin:0; padding:0; list-style:none; }
+.icons a{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; color:var(--ink-2);
+  border:1px solid var(--rule-2); border-radius:50%;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.icons a:hover{ color:#fff; background:var(--acc); border-color:var(--acc); }
+.icons svg{ width:19px; height:19px; display:block; }
+.contact-note{ margin:0 0 18px; font-size:15.5px; color:var(--ink-2); }
 
 </style>
 </head>
 <body>
+<div class="page">
 
-    <div id="canvas-container"></div>
+  <header class="site-head">
+    <a class="name" href="index.html">Marius Leckelt</a>
+    <nav aria-label="Primary">
+      <a href="index.html" aria-current="page">Home</a>
+      <a href="#research">Research</a>
+      <a href="#press">Press</a>
+      <a href="millionaire-quiz.html">Quiz</a>
+      <a href="#contact">Contact</a>
+      <span class="place">Zürich</span>
+    </nav>
+  </header>
 
-    <div class="container">
-        <header>
-            <div class="breadcrumb">system / profiles / exec_dir_ai</div>
-            <h1>Hi, thanks for stopping by. 🙋🏻‍♂️ <br/>- Marius</h1>
-            <p style="color: var(--muted); font-size: 1.2rem; margin-top: 5px;">AI (Strategy) Director & Behavioral Scientist</p>
-        </header>
-
-        <nav class="console-nav" aria-label="Sections">
-            <a href="#home" data-tablink>[ home ]</a>
-            <a href="#publications" data-tablink>[ publications ]</a>
-            <a href="#media" data-tablink>[ media ]</a>
-        </nav>
-
-
-        <section id="home" class="tab-section" data-tab="home">
-            <h2>// Home</h2>
-            <p style="color: var(--muted); margin-top:-8px;"><span class="psych-term" data-definition="Currently at a global management consulting company.">I build and advise on AI systems</span> that work in the real world; grounded in <span class="psych-term" data-definition="I am a former psychology professor and use my experience in the empirical study of human decision‑making, cognition, and behavior to design human-centred AI.">behavioral science</span>.</p>
-            <div style="margin-top:14px; padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04);">
-                <p style="margin:0;">
-                    Welcome. This site is intentionally minimal: you can find ways to contact me and, if interested, browse my research outputs and public-facing media.
-                </p>
-                <p style="margin-top:10px; margin-bottom:0; font-family: monospace; color: rgba(255,255,255,0.9);">
-                    Navigate:
-                    <a href="#publications">[ publications ]</a>
-                    <span style="color: var(--muted);">|</span>
-                    <a href="#media">[ media ]</a>
-                </p>
-            </div>
-        </section>
-
-        <section id="publications" class="tab-section" data-tab="publications">
-            <h2>// Publications</h2>
-            <p style="color: var(--muted); margin-top:-8px;">Peer-reviewed articles, book chapters, and related work.</p>
-            <div class="accordion-stack">                <details class="accordion" >
-                    <summary><span class="badge">In revision</span> <span class="muted">1 item</span></summary>
-                    <ul class="pub-list">
-                        <li><b>Leckelt, M.</b> , Schmukle, S. C., & Egloff, B. (in revision). <i>Robust Worldwide Evidence that Economic Inequality is Associated with Risk-Taking</i> .</li>
-                    </ul>
-                </details>
-                <details class="accordion" open>
-                    <summary><span class="badge">2023</span> <span class="muted">1 item</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://psycnet.apa.org/record/2023-72254-001?doi=1" target="_blank">[PDF]</a> Weidmann, R., Chopik, W. J., [...], <b>Leckelt, M.</b> , [...], & Back, M. D. (conditionally accepted). <i>Age Differences in Narcissism: A Comprehensive Study Across Eight Measures and Over 250,000 Participants</i> . <i> Journal of Personality and Social Psychology,</i> 124(6), 1277-1298.</li>
-                    </ul>
-                </details>
-                <details class="accordion" open>
-                    <summary><span class="badge">2022</span> <span class="muted">2 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://www.nature.com/articles/s41599-022-01099-3" target="_blank">[PDF]</a> <b>Leckelt, M.</b> , König, J., Richter, D., Schröder, C., & Back, M. D. (2022). The Personality Traits of Self-Made and Inherited Millionaires. <i>Humanities and Social Sciences Communications</i> , 9(94). https://doi.org/10.1057/s41599-022-01099-3</li>
-                        <li><a href="https://drive.google.com/file/d/13VVQuENpXlfHcrIq0WFt8gMZBY4tuLjt/view?usp=sharing" target="_blank">[PDF]</a> Grosz, M., Hartmann, I., Dufner, M., <b>Leckelt, M.</b> , Gerlach, T. M., Rauthmann, J. F., Denissen, J. J. A., Küfner, A. C. P., Back, M. D. (2022). A Process × Domain Assessment of Narcissism: The Domain-Specific Narcissistic Admiration and Rivalry Questionnaire. <i>Assessment, 29(7)</i> , 1482-1495</li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2021</span> <span class="muted">2 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/1vo_6hwBqSUOLofhMKu69LvgpdgGfGz1s/view?usp=sharing" target="_blank">[PDF]</a> Schregel, J. P., <b>Leckelt, M.</b> , & Zülch, H. (2021). Die Prognose von Erfolg und Misserfolg in der Bundesliga durch Machine Learning: Der FoMa Q-Score als intelligentes Steuerungsinstrument. <i>Sciamus - Sport und Management, Jg. 2021, Nr. 4, S. 26-46</i> .</li>
-                        <li><a href="https://drive.google.com/file/d/1sg8-Jk_uzl7xLPsWmVX00FjmZy7GOXDz/view?usp=sharing" target="_blank">[PDF]</a> Härtel, T. M., <b>Leckelt, M.</b> , Grosz, M. P., Küfner, A. C. P., Geukes, K., & Back, M. D. (2021). Pathways From Narcissism to Leadership Emergence in Social Groups. <i> European Journal of Personality, 35(5)</i> , 1-23</li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2020</span> <span class="muted">3 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/1QEwd5Hr87xV4bqcCLluHfreqzvrcLOoA/view?usp=sharing" target="_blank">[PDF]</a> Grosz, M.P., <b> Leckelt, M.</b> , & Back, M. D. (2020). Personality predictors of social status attainment. <i>Current Opinion in Psychology, 33</i> , 52-56</li>
-                        <li><a href="https://drive.google.com/file/d/1jkijmYsIi9Mxdn32O_jze9oTgunvRNS7/view?usp=sharing" target="_blank"> [PDF]</a> Wehner, C., Maaß, U., <b>Leckelt, M.</b> , Back, M. D., & Ziegler, M. (2020). Validation of the Short Dark Triad in a German sample: Structure, nomological network, and an ultrashort version. <i>European Journal of Psychological Assessment</i></li>
-                        <li><a href="https://drive.google.com/file/d/1nJgEdsraOzjD8ubLJxb_AXMuXFTIYX-r/view?usp=sharing" target="_blank">[PDF]</a> Mielke, I., Humberg, S., <b>Leckelt, M.</b> , Geukes, K., & Back, M. D. (in press). Do narcissists self-enhance? Disentangling the associations between narcissism and positive versus enhanced self-views across aspects of narcissism, content domains, and comparison criteria. <i>Social Psychological and Personality Science </i></li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2019</span> <span class="muted">5 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/1lv8MVc8qSkf7kyko9TextOVAFLYVaE4F/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Geukes, K., Küfner, A. C. P., Niemeyer, L. M., Hutteman, R., Osterholz, S., … & Back, M. D. (2019). A Longitudinal Field Investigation of Narcissism and Popularity Over Time: How Agentic and Antagonistic Aspects of Narcissism Shape the Development of Peer Relationships. <i>Personality and Social Psychology Bulletin, 46</i> , 643-659</li>
-                        <li><a href="https://doi.org/10.1525/collabra.248" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Richter, D., Wetzel, E., & Back, M. D. (2019). Longitudinal Associations of Narcissism with Interpersonal, Intrapersonal, and Institutional Outcomes: An Investigation Using a Representative Sample of the German Population. <i>COLLABRA: PSYCHOLOGY, 5(1):26 </i></li>
-                        <li><a href="https://drive.google.com/file/d/14r8h5m-hTfg07OaXmkq3BTsqn0e_Ej6W/view?usp=sharing" target="_blank">[PDF]</a> Weber, S., Geukes, K., <b> Leckelt, M.</b> , & Back, M. D. (2019). The attractiveness of narcissists: Hard work or natural beauty?. <i>Self &amp; Identity, 20</i> (2), 235-267</li>
-                        <li><a href="https://doi.org/10.1525/collabra.174" target="_blank">[PDF]</a> Mota, S., <b> Leckelt, M.</b> , Geukes, K., Humberg, S., Haffke, A., Schröder-Abé, M., Nestler, S., Schmukle, S., & Back, M. D. (2019). A Comprehensive Examination of Narcissists’ Self-Perceived and Actual Socioemotional Cognition Ability. <i>COLLABRA: PSYCHOLOGY, 5(1): 6 </i></li>
-                        <li><a href="https://drive.google.com/file/d/1S0vQK2dqLYNvj95S9O0sR4-BL_oYFfpy/view?usp=sharing" target="_blank">[PDF]</a> Grosz, M. P., Emons, W. H. M., Wetzel, E., <b>Leckelt, M.</b> , Chopik, W. J., Rose, N., & Back, M. D. (2019). A Comparison of Unidimensionality and Measurement Precision of the Narcissistic Personality Inventory and the Narcissistic Admiration and Rivalry Questionnaire. <i>Assessment, 26</i> (2), 281-293.</li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2018</span> <span class="muted">4 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/1DMt0lYYKmmVrEBIHnRpWJeedESpscnlE/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Richter, D., Schröder, C., Küfner, A. C. P., Grabka, M. M., & Back, M. D. (2018). The rich <i>are</i> different: Unraveling the perceived and self-reported personality profiles of high net-worth individuals. <i>British Journal of Psychology</i> , 110, 769-789</li>
-                        <li><a href="https://doi.org/10.26387/bpa.281.3" target="_blank">[PDF (paywalled)]</a> Vecchione, M., Dentale, F., Graziano, M., Dufner, M., Wetzel, E., <b>Leckelt, M.</b> , & Back, M. D. (2018). An Italian validation of the Narcissistic Admiration and Rivalry Questionnaire (NARQ): Further evidence for a two-dimensional model of grandiose narcissism. <i> Applied Psychology Bulletin, 66</i></li>
-                        <li><a href="https://drive.google.com/file/d/1BPETHrOCu3iQFSIYqnx2YbSgYDAFUNCN/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Wetzel, E., Gerlach, T. M., Ackerman, R. A., Miller, J. D., Chopik, W. J., …, Back, M. D. (2018). Validation of the Narcissistic Admiration and Rivalry Questionnaire short scale (NARQ-S) in convenience and representative samples. <i>Psychological Assessment, 30</i> , 86—96</li>
-                        <li><a href="https://drive.google.com/file/d/1029mWfwnQKUJcotSG7YJDa2hxceL1SeG/view?usp=sharing">[PDF]</a> [book chapter] Back, M.D., Küfner, A.C.P., & <b>Leckelt, M.</b> (2018). Early Impressions of Grandiose Narcissists: A Dual-Pathway Perspective. In A. D. Hermann, A. Brunell, & J. Foster (Eds.), <i>The Handbook of trait narcissism: Key advances, research methods, and controversies</i> (pp. 309—316). New York, NY: Springer</li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2017</span> <span class="muted">2 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/1eXesHs2OpwC9MlWq5nqLSOjR_T11IPiY/view?usp=sharing" target="_blank">[PDF]</a> Mahmoodi, J., <b>Leckelt, M.</b> , van Zalk, M.W.H., Geukes, K., & Back, M. D. (2017). Big Data approaches in social and behavioral science: Four key trade-offs and a call for integration. <i>Current Opinion in Behavioral Sciences, 18</i> , 57—62</li>
-                        <li><a href="https://drive.google.com/file/d/1BZ8UYvurKG5EAuUenmcSCMS7qfQ4ELvm/view?usp=sharing" target="_blank">[PDF]</a> Nestler, S., <b>Leckelt, M.</b> , Back, M. D., von der Beck, I., Cress, U., & Oeberst, A. (2017). The production of scientific information on the internet using the example of Wikipedia [Produktion von naturwissenschaftlichen Informationen im Internet am Beispiel von Wikipedia]. <i>Psychologische Rundschau, 68</i> , 172—176.</li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2016</span> <span class="muted">2 items</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/1AGOCAVA32j8ZRKQlCQqGMWIV7PpoAsxj/view?usp=sharing" target="_blank">[PDF]</a> Wetzel, E., <b>Leckelt, M.</b> , Gerlach, T. J., & Back, M. D. (2016). Distinguishing subgroups of narcissists with latent class analysis. <i>European Journal of Personality, 30</i> , 374—389</li>
-                        <li><a href="https://drive.google.com/file/d/18WrLt4HCdCPLOJ4DxVd4xHHQOK5yJpVA/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Back, M. D., Foster, J. D., Hutteman, R., Jaeger, G., McCain, J., Twenge, J. M., & Campbell, W. K. (2016). Entering adulthood in a recession tempers later narcissism—But only in men. <i>Journal of Research in Personality, 60</i> , 8—11</li>
-                    </ul>
-                </details>
-                <details class="accordion" >
-                    <summary><span class="badge">2015</span> <span class="muted">1 item</span></summary>
-                    <ul class="pub-list">
-                        <li><a href="https://drive.google.com/file/d/12DrOFabAdmMg41O-IZQX6D_ibLqi5rPE/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Küfner, A. C. P., Nestler, S., & Back, M. D. (2015). Behavioral processes underlying the decline of narcissists‘ popularity over time. <i>Journal of Personality and Social Psychology, 109</i> , 856—871</li>
-                    </ul>
-                </details>
-            </div>
-        </section>
-
-<section id="media" class="tab-section" data-tab="media">
-            <h2>// Media Appearances</h2>
-            <p style="color: var(--muted); margin-top:-8px;">Coverage, interviews, talks, and consulting.</p>
-            <ul class="media-list">
-                <li><span class="tag">/JUN/2023</span><span class="media-body">Our study on age and gender differences in narcissism was covered in: <a href="https://www.deutschlandfunknova.de/nachrichten/junge-erwachsene-warum-wir-uns-selbst-lieben" target="_blank"><b>Deutschlandfunk Nova</b></a> , <a href="https://www.welt.de/iconist/partnerschaft/article245867840/Narzissmus-Maenner-sind-selbstverliebter-als-Frauen.html" target="_blank"><b>Welt.de</b></a> , and <a href="https://www.tagesspiegel.de/wissen/verzerrtes-selbstbild-manner-sind-selbstverliebter-als-frauen-9987379.html" target="_blank"><b>Tagesspiegel.</b></a></span></li>
-                <li><span class="tag">/APR/2022</span><span class="media-body">Our study on the personality traits of self-made and inherited millionaires was covered in: <a href="https://www.cnbc.com/2022/04/07/many-millionaires-share-these-5-personality-traits-study-says.html" target="_blank"><b>CNBC</b></a> , <b>FAZ</b> <a href="https://www.faz.net/aktuell/wirtschaft/ticken-sie-wie-ein-millionaer-der-test-17928842.html" target="_blank"><b>(here</b></a> , <a href="https://www.faz.net/aktuell/wissen/wie-man-millionaer-wird-soziologischer-blick-auf-schwerreiche-17944706.html" target="_blank"><b> here</b></a> , and, <a href="https://www.faz.net/aktuell/wirtschaft/ticken-sie-wie-ein-millionaer-der-test-17928842.html" target="_blank"><b> here)</b></a> , <a href="https://nationalinterest.org/blog/buzz/do-super-rich-have-different-personalities-rest-us-201721" target="_blank"><b>The National Interest</b></a> , <a href="https://digest.bps.org.uk/2022/04/05/here-are-the-personality-traits-of-the-self-made-millionaire/" target="_blank"><b>British Psychological Society</b></a> , <a href="https://phys.org/news/2022-04-millionaires-risk-tolerant-emotionally-stable.html" target="_blank"><b>Phys.org</b></a> , <a href="https://www.focus.de/finanzen/boerse/f100/es-liegt-an-ihnen-millionaer-werden-leicht-gemacht-wenn-nicht-ihre-persoenlichkeit-im-weg-steht_id_79563858.html" target="_blank"><b>Focus Online (1)</b></a> , <a href="https://www.focus.de/finanzen/experten/reich-werden-testen-sie-ob-sie-das-zeug-zum-millionaer-haben_id_183020688.html" target="_blank"><b>Focus Online (2)</b></a> , <a href="https://www.focus.de/finanzen/news/gastbeitrag-von-rainer-zitelmann-vier-von-fuenf-menschen-werden-nicht-durch-erbschaft-reich_id_186888430.html" target="_blank"><b>Focus Online (2)</b></a> , <a href="https://www.capital.de/karriere/reichen-studie--es-gibt-eine-millionaerspersoenlichkeit-31762802.html" target="_blank"></a> <b>Capital</b> , <a href="https://www.businessinsider.de/karriere/millionaerspersoenlichkeit-je-staerker-sie-ist-desto-groesser-das-vermoegen-a/" target="_blank"><b>Business Insider</b></a> , <a href="https://www.deutschlandfunknova.de/nachrichten/millionaere-der-charakter-der-reichen" target="_blank"><b>Deutschlandfunk Nova</b></a> .</span></li>
-                <li><span class="tag">01/APR/2022</span><span class="media-body"><a href="https://www.faz.net/aktuell/wirtschaft/ticken-sie-wie-ein-millionaer-der-test-17928842.html" target="_blank"><b>FAZ </b></a> published a quiz that allows you to compare your personality to the personality of millionaires.</span></li>
-                <li><span class="tag">01/APR/2022</span><span class="media-body"><a href="https://zeitung.faz.net/fas/wirtschaft/2022-04-03/so-ticken-die-reichen/743479.html" target="_blank"><b>FAZ </b></a> covered our research on the personality traits of self-made and inherited millionaires.</span></li>
-                <li><span class="tag">26/JAN/2021</span><span class="media-body"><a href="https://www.welt.de/kmpkt/article184479698/Diese-Eigenschaften-unterscheiden-Millionaere-vom-Rest-der-Bevoelkerung.html" target="_blank"><b>Die WELT </b></a> covered our research on the personality on high net-worth individuals.</span></li>
-                <li><span class="tag">19/MAY/2020</span><span class="media-body">Invited talk at the <a href="https://mainz-churmeyntz.rotary.de/" target="_blank"> <b>Rotary Club Mainz</b></a> on the personality of high net-worth individuals.</span></li>
-                <li><span class="tag">09/JUL/2019</span><span class="media-body"><a href="https://edition.faz.net/faz-edition/rhein-main-zeitung/2019-07-09/reich-wird-man-durch-selbststaendigkeit/330753.html" target="_blank"><b>FAZ</b> </a> Interview on the personality of high net-worth individuals.</span></li>
-                <li><span class="tag">02/JUN/2019</span><span class="media-body">Our study on the personality of high net-worth individuals was featured in the German news magazine <a href="https://www.focus.de/finanzen/experten/gastbeitrag-von-rainer-zitelmann-neue-studien-zeigen-wie-sich-reiche-von-anderen-menschen-unterscheiden_id_10753722.html" target="_blank"> <b>FOCUS</b>.</a></span></li>
-                <li><span class="tag">05/DEC/2018</span><span class="media-body"><a><b>Hessischer Rundfunk (HR 1)</b></a> Radio interview on the personality of high-net-worth individuals</span></li>
-                <li><span class="tag">NOV/DEC/2018</span><span class="media-body">Our research on the personality of high-net-worth individuals has been covered in several national and international news outlets. For example: <a href="https://www.dailymail.co.uk/news/article-6419959/Millionaires-likely-narcissists-think-theyre-special.html" target="_blank"><b>Daily Mail</b></a> | <a href="https://www.wiwo.de/erfolg/trends/studie-reiche-ticken-anders/23686844.html" target="_blank"><b>WirtschaftsWoche</b></a> | <a href="https://www.welt.de/kmpkt/article184479698/Laut-Psychologen-Diese-Eigenschaften-unterscheiden-deutsche-Millionaere-vom-Rest-der-Bevoelkerung.html" target="_blank"><b>WELT</b></a> | <a href="https://www.morgenpost.de/vermischtes/article215879327/Ticken-Millionaere-wirklich-anders-als-normale-Menschen.html" target="_blank"><b>Berliner Morgenpost</b></a> | <a href="https://derstandard.at/2000092108493/Extravertiert-rivalisierend-Wie-Millionaere-im-Kopf-ticken" target="_blank"><b>Der Standard</b></a></span></li>
-                <li><span class="tag">29/NOV/2017</span><span class="media-body"><a href="https://www1.wdr.de/radio/wdr3/programm/sendungen/wdr3-resonanzen/index.html" target="_blank"><b>WDR3 Resonanzen</b></a> Radio interview on the "narcissism epidemic"</span></li>
-                <li><span class="tag">25/NOV/2017</span><span class="media-body"><a href="http://www.sueddeutsche.de/wissen/psychologie-ich-bin-so-schoen-1.3763455" target="_blank"><b>Süddeutsche Zeitung </b></a> I am so pretty - How narcissistic are Millenials? <a href="https://ssl-account.com/oc.sharedvariance.com/index.php/s/vNd4Dx3tYvNumAg" target="_blank">[PDF]</a></span></li>
-                <li><span class="tag">31/SEP/2017</span><span class="media-body"><a href="http://www.zeit.de/campus/2017-08/beat-the-prof-narzissmus" target="_blank"><b>ZEIT Online</b></a> "Beat the Prof" Quiz on narcissism</span></li>
-                <li><span class="tag">MAY/2017</span><span class="media-body"><a href="http://www.spektrum.de/magazin/gesundes-selbstwertgefuehl-oder-narzissmus/1440292" target="_blank"><b>Gehirn und Geist </b></a> Ego on the Edge</span></li>
-                <li><span class="tag">20/FEB/2017</span><span class="media-body"><a href="https://www1.wdr.de/radio/1live/index.html" target="_blank"><b>WDR 1LIVE </b> </a> Radio interview on Donald Trump and narcissism</span></li>
-                <li><span class="tag">17/FEB/2017</span><span class="media-body"><a href="https://www.swr.de/swraktuell/-/id=13830988/ypzx6n/index.html" target="_blank"><b>SWR Aktuell </b> </a> Radio interview on Donald Trump and narcissism</span></li>
-                <li><span class="tag">07/FEB/2017</span><span class="media-body"><a href="http://www.zeit.de/wissen/gesundheit/2017-02/donald-trump-psychologie-narzisst-diagnose" target="_blank"><b>Die ZEIT </b></a> Trump only loves himself</span></li>
-                <li><span class="tag">06/FEB/2017</span><span class="media-body">Consulting for the German political talk show <b>hart</b> aber <b>fair</b> on differentiating narcissism from psychopathy <a href="http://www.ardmediathek.de/tv/Hart-aber-fair/Trump-und-wir-Experten-beantworten-Zus/Das-Erste/Video?bcastId=561146&amp;documentId=40512562" target="_blank">[LINK]</a></span></li>
-                <li><span class="tag">01/NOV/2016</span><span class="media-body"><a href="https://ssl-account.com/oc.sharedvariance.com/index.php/s/5GIV9tLAUwJIjqB" target="_blank"><b>Die WELT/WELT.de </b></a> - Donald Trump – A Textbook Example Narcissist</span></li>
-                <li><span class="tag">12/APR/2016</span><span class="media-body"><a href="http://www.psychologicalscience.org/news/minds-business/new-study-busts-some-myths-about-millennials.html" target="_blank"><b>Association for Psychological Science </b></a> - New Study Busts Some Myths About Millenials</span></li>
-                <li><span class="tag">07/DEC/2015</span><span class="media-body"><a href="https://www.welt.de/wissenschaft/article149692971/Warum-radikal-ruecksichtlose-Menschen-weiter-kommen.html" target="_blank"><b>Welt am Sonntag </b></a> - Why radically ruthless people get ahead</span></li>
-                <li><span class="tag">29/SEP/2015</span><span class="media-body"><a href="https://blogs.scientificamerican.com/beautiful-minds/why-do-narcissists-lose-popularity-over-time/" target="_blank"><b>Scientific American </b></a> - Why Do Narcissists Lose Popularity Over Time?</span></li>
-            </ul>
-        </section>
-
-        <section class="tab-section" data-tab="home">
-            <!-- <h2>// Core Competencies</h2>
-            <div class="grid">
-                <div class="stat-item">01. Neural Architecture</div>
-                <div class="stat-item">02. Behavioral Economics</div>
-                <div class="stat-item">03. GenAI Governance</div>
-                <div class="stat-item">04. Strategic Leadership</div>
-            </div> -->
-        </section>
-
-        <section class="tab-section" data-tab="home">
-            <h2>// Contact</h2>
-            <p>
-                <a href="https://scholar.google.de/citations?user=arVjclEAAAAJ&hl=en" target="_blank">🔬 Research portfolio</a> &nbsp; | &nbsp;
-                <a href="https://linkedin.com/in/mariusleckelt">👔 LinkedIn</a> &nbsp; | &nbsp; 
-                <a href="mailto:aaihjblkc@mozmail.com">📧 Email</a> &nbsp; | &nbsp;
-                <a href="https://github.com/mleckelt">👨🏻‍💻GitHub</a>
-            </p>
-            <div id="scholar-stats" aria-hidden="false" style="margin-top:8px; font-size:0.9rem; color:var(--muted);"></div>
-        </section>
-
-        <footer>
-            <div class="footer-flex">
-                <div>
-                    <strong>© 2026 [Marius]</strong><br>
-                    All Rights Reserved. 
-                </div>
-                <div style="font-family: 'SF Mono', monospace; text-align: right;">
-                    STATUS: <span style="color: #4ade80;">ONLINE</span><br>
-                    BUILD: 02-2026-FLASH
-                </div>
-            </div>
-            <p style="margin-top: 20px; opacity: 0.6; font-style: italic;">
-                Transparency: This interface was designed using Gemini 3 Flash and poorly implemented by a human.
-                Background visualization powered by p5.js neural simulations.
-            </p>
-        </footer>
+  <section class="hero grid" aria-label="Introduction">
+    <div class="lbl">
+      <span>Program director</span>
+      <span>Agentic AI, RL training data</span>
+      <span>&amp; frontier model evaluation</span>
     </div>
+    <div class="body">
+      <h1>My work helps AI labs, big tech, and enterprises train and evaluate models on complex, long-horizon tasks.</h1>
+      <p class="sub">
+        Training data, environments, and benchmarks for the tasks today’s models still struggle with.
+      </p>
+      <div class="try has-mini">
+        <div>
+          <p><b>New: the millionaire personality index.</b> Answer the same items as the participants in my two studies of millionaires, and see how close your profile comes.</p>
+          <a class="link" href="millionaire-quiz.html">Take the quiz →</a>
+        </div>
+        <a class="mini-link" href="millionaire-quiz.html" tabindex="-1" aria-hidden="true"><svg class="mini-radar" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle cx="60" cy="60" r="52.0" fill="none" stroke="#CFD9D2" stroke-width="1"/><circle cx="60" cy="60" r="26.0" fill="none" stroke="#9AA6A0" stroke-width="1.2"/><line x1="60" y1="60" x2="60.0" y2="8.0" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="93.4" y2="20.2" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="111.2" y2="51.0" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="105.0" y2="86.0" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="77.8" y2="108.9" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="42.2" y2="108.9" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="15.0" y2="86.0" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="8.8" y2="51.0" stroke="#D6DFD9" stroke-width="1"/><line x1="60" y1="60" x2="26.6" y2="20.2" stroke="#D6DFD9" stroke-width="1"/><polygon points="60.0,24.6 79.3,37.0 91.9,54.4 82.6,73.0 70.2,88.0 47.4,94.7 31.0,76.7 30.4,54.8 38.9,34.8" fill="#B5651D" fill-opacity=".12" stroke="#B5651D" stroke-width="1.5" stroke-dasharray="3,2.5"/><polygon points="60.0,18.4 73.4,44.1 104.4,52.2 88.5,76.5 67.7,81.2 43.7,104.8 34.5,74.7 44.6,57.3 35.5,30.8" fill="#1D8055" fill-opacity=".16" stroke="#1D8055" stroke-width="1.75"/><circle cx="60.0" cy="18.4" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="73.4" cy="44.1" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="104.4" cy="52.2" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="88.5" cy="76.5" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="67.7" cy="81.2" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="43.7" cy="104.8" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="34.5" cy="74.7" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="44.6" cy="57.3" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/><circle cx="35.5" cy="30.8" r="2.6" fill="#1D8055" stroke="#EAF0EC" stroke-width="1.2"/></svg></a>
+      </div>
+    </div>
+  </section>
 
-    <script>
-        let particles = [];
-        const canvasParent = document.getElementById('canvas-container');
+  <section class="path grid" aria-label="Career">
+    <div class="lbl"><h2>Career</h2></div>
+    <div class="body path-cols">
+      <div>
+        <h3>Now</h3>
+        <p>Program director at an AI startup — agentic AI, RL training data, and frontier model evaluation.</p>
+      </div>
+      <div>
+        <h3>Before</h3>
+        <p>AI consulting at Bain — took products from first concept through to live, then scaled them to users.</p>
+      </div>
+      <div>
+        <h3>Before that</h3>
+        <p>Academic research in personality psychology and psychometrics — how people differ, how to measure it, and what it means for their lives.</p>
+      </div>
+    </div>
+  </section>
 
-        function setup() {
-            let canvas = createCanvas(windowWidth, windowHeight);
-            canvas.parent('canvas-container');
-            for (let i = 0; i < 70; i++) {
-                particles.push(new Particle());
-            }
-        }
+  <section class="sec grid" id="research">
+    <div class="lbl">
+      <h2>Research</h2>
+      <span class="aside">2015–2023</span>
+    </div>
+    <div class="body">
+      <p class="intro">
+        Peer-reviewed work in personality psychology and psychometrics (narcissism, status,
+        and wealth): how people differ, how to measure those differences well, and what
+        they mean for careers and relationships.
+      </p>
 
-        function draw() {
-            // Constellation style: clear each frame, draw neon glow links to nearest neighbors
-            clear();
-            background(7, 16, 36, 0);
+      <div class="metrics" aria-label="Google Scholar metrics">
+        <div class="metric"><b id="m-cit">1,569</b><span>citations</span></div>
+        <div class="metric"><b id="m-h">18</b><span>h-index</span></div>
+        <div class="metric"><b id="m-i10">20</b><span>i10-index</span></div>
+        <div class="metric-trend">
+          <span id="m-spark"></span>
+          <span id="m-updated">Google Scholar, updated weekly</span>
+        </div>
+      </div>
 
-            // Update all particles first
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-            }
+      <h3 class="subhead">Selected publications</h3>
+      <ol class="selected">
+        <li>
+          <span class="yr">2023</span>
+          <div>
+            <a class="ttl" href="https://psycnet.apa.org/record/2023-72254-001?doi=1" target="_blank" rel="noopener">Age differences in narcissism: A comprehensive study across eight measures and over 250,000 participants</a>
+            <div class="meta">Weidmann, Chopik, … Leckelt, … Back · <i>Journal of Personality and Social Psychology</i></div>
+          </div>
+        </li>
+        <li>
+          <span class="yr">2022</span>
+          <div>
+            <a class="ttl" href="https://www.nature.com/articles/s41599-022-01099-3" target="_blank" rel="noopener">The personality traits of self-made and inherited millionaires</a>
+            <div class="meta">Leckelt, König, Richter, Back &amp; Schröder · <i>Humanities and Social Sciences Communications</i></div>
+          </div>
+        </li>
+        <li>
+          <span class="yr">2019</span>
+          <div>
+            <a class="ttl" href="https://doi.org/10.1111/bjop.12360" target="_blank" rel="noopener">The rich are different: Unravelling the perceived and self-reported personality profiles of high-net-worth individuals</a>
+            <div class="meta">Leckelt, Richter, Schröder, Küfner, Grabka &amp; Back · <i>British Journal of Psychology</i></div>
+          </div>
+        </li>
+        <li>
+          <span class="yr">2018</span>
+          <div>
+            <a class="ttl" href="https://doi.org/10.1037/pas0000433" target="_blank" rel="noopener">Validation of the Narcissistic Admiration and Rivalry Questionnaire Short Scale (NARQ-S) in convenience and representative samples</a>
+            <div class="meta">Leckelt, Wetzel, Gerlach, … Back · <i>Psychological Assessment</i></div>
+          </div>
+        </li>
+        <li>
+          <span class="yr">2015</span>
+          <div>
+            <a class="ttl" href="https://drive.google.com/file/d/12DrOFabAdmMg41O-IZQX6D_ibLqi5rPE/view?usp=sharing" target="_blank" rel="noopener">Behavioral processes underlying the decline of narcissists’ popularity over time</a>
+            <div class="meta">Leckelt, Küfner, Nestler &amp; Back · <i>Journal of Personality and Social Psychology</i></div>
+          </div>
+        </li>
+      </ol>
 
-            // additive blending for neon glow lines
-            blendMode(ADD);
+      <button class="archive-toggle" type="button" aria-expanded="false" aria-controls="pubs" data-hide="Hide publications">
+        <span class="sign" aria-hidden="true"></span><span class="t">All publications</span><span class="n">23</span>
+      </button>
+      <div class="archive-body" id="pubs">
+      <div class="accordion-stack">
+        <details class="accordion">
+                            <summary><span class="badge">In revision</span> <span class="muted">1 item</span></summary>
+                            <ul class="pub-list">
+                                <li><b>Leckelt, M.</b> , Schmukle, S. C., & Egloff, B. (in revision). <i>Robust Worldwide Evidence that Economic Inequality is Associated with Risk-Taking</i> .</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2023</span> <span class="muted">1 item</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://psycnet.apa.org/record/2023-72254-001?doi=1" target="_blank">[PDF]</a> Weidmann, R., Chopik, W. J., [...], <b>Leckelt, M.</b> , [...], & Back, M. D. (conditionally accepted). <i>Age Differences in Narcissism: A Comprehensive Study Across Eight Measures and Over 250,000 Participants</i> . <i> Journal of Personality and Social Psychology,</i> 124(6), 1277-1298.</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2022</span> <span class="muted">2 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://www.nature.com/articles/s41599-022-01099-3" target="_blank">[PDF]</a> <b>Leckelt, M.</b> , König, J., Richter, D., Schröder, C., & Back, M. D. (2022). The Personality Traits of Self-Made and Inherited Millionaires. <i>Humanities and Social Sciences Communications</i> , 9(94). https://doi.org/10.1057/s41599-022-01099-3</li>
+                                <li><a href="https://drive.google.com/file/d/13VVQuENpXlfHcrIq0WFt8gMZBY4tuLjt/view?usp=sharing" target="_blank">[PDF]</a> Grosz, M., Hartmann, I., Dufner, M., <b>Leckelt, M.</b> , Gerlach, T. M., Rauthmann, J. F., Denissen, J. J. A., Küfner, A. C. P., Back, M. D. (2022). A Process × Domain Assessment of Narcissism: The Domain-Specific Narcissistic Admiration and Rivalry Questionnaire. <i>Assessment, 29(7)</i> , 1482-1495</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2021</span> <span class="muted">2 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/1vo_6hwBqSUOLofhMKu69LvgpdgGfGz1s/view?usp=sharing" target="_blank">[PDF]</a> Schregel, J. P., <b>Leckelt, M.</b> , & Zülch, H. (2021). Die Prognose von Erfolg und Misserfolg in der Bundesliga durch Machine Learning: Der FoMa Q-Score als intelligentes Steuerungsinstrument. <i>Sciamus - Sport und Management, Jg. 2021, Nr. 4, S. 26-46</i> .</li>
+                                <li><a href="https://drive.google.com/file/d/1sg8-Jk_uzl7xLPsWmVX00FjmZy7GOXDz/view?usp=sharing" target="_blank">[PDF]</a> Härtel, T. M., <b>Leckelt, M.</b> , Grosz, M. P., Küfner, A. C. P., Geukes, K., & Back, M. D. (2021). Pathways From Narcissism to Leadership Emergence in Social Groups. <i> European Journal of Personality, 35(5)</i> , 1-23</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2020</span> <span class="muted">3 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/1QEwd5Hr87xV4bqcCLluHfreqzvrcLOoA/view?usp=sharing" target="_blank">[PDF]</a> Grosz, M.P., <b> Leckelt, M.</b> , & Back, M. D. (2020). Personality predictors of social status attainment. <i>Current Opinion in Psychology, 33</i> , 52-56</li>
+                                <li><a href="https://drive.google.com/file/d/1jkijmYsIi9Mxdn32O_jze9oTgunvRNS7/view?usp=sharing" target="_blank"> [PDF]</a> Wehner, C., Maaß, U., <b>Leckelt, M.</b> , Back, M. D., & Ziegler, M. (2020). Validation of the Short Dark Triad in a German sample: Structure, nomological network, and an ultrashort version. <i>European Journal of Psychological Assessment</i></li>
+                                <li><a href="https://drive.google.com/file/d/1nJgEdsraOzjD8ubLJxb_AXMuXFTIYX-r/view?usp=sharing" target="_blank">[PDF]</a> Mielke, I., Humberg, S., <b>Leckelt, M.</b> , Geukes, K., & Back, M. D. (in press). Do narcissists self-enhance? Disentangling the associations between narcissism and positive versus enhanced self-views across aspects of narcissism, content domains, and comparison criteria. <i>Social Psychological and Personality Science </i></li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2019</span> <span class="muted">5 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/1lv8MVc8qSkf7kyko9TextOVAFLYVaE4F/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Geukes, K., Küfner, A. C. P., Niemeyer, L. M., Hutteman, R., Osterholz, S., … & Back, M. D. (2019). A Longitudinal Field Investigation of Narcissism and Popularity Over Time: How Agentic and Antagonistic Aspects of Narcissism Shape the Development of Peer Relationships. <i>Personality and Social Psychology Bulletin, 46</i> , 643-659</li>
+                                <li><a href="https://doi.org/10.1525/collabra.248" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Richter, D., Wetzel, E., & Back, M. D. (2019). Longitudinal Associations of Narcissism with Interpersonal, Intrapersonal, and Institutional Outcomes: An Investigation Using a Representative Sample of the German Population. <i>COLLABRA: PSYCHOLOGY, 5(1):26 </i></li>
+                                <li><a href="https://drive.google.com/file/d/14r8h5m-hTfg07OaXmkq3BTsqn0e_Ej6W/view?usp=sharing" target="_blank">[PDF]</a> Weber, S., Geukes, K., <b> Leckelt, M.</b> , & Back, M. D. (2019). The attractiveness of narcissists: Hard work or natural beauty?. <i>Self &amp; Identity, 20</i> (2), 235-267</li>
+                                <li><a href="https://doi.org/10.1525/collabra.174" target="_blank">[PDF]</a> Mota, S., <b> Leckelt, M.</b> , Geukes, K., Humberg, S., Haffke, A., Schröder-Abé, M., Nestler, S., Schmukle, S., & Back, M. D. (2019). A Comprehensive Examination of Narcissists’ Self-Perceived and Actual Socioemotional Cognition Ability. <i>COLLABRA: PSYCHOLOGY, 5(1): 6 </i></li>
+                                <li><a href="https://drive.google.com/file/d/1S0vQK2dqLYNvj95S9O0sR4-BL_oYFfpy/view?usp=sharing" target="_blank">[PDF]</a> Grosz, M. P., Emons, W. H. M., Wetzel, E., <b>Leckelt, M.</b> , Chopik, W. J., Rose, N., & Back, M. D. (2019). A Comparison of Unidimensionality and Measurement Precision of the Narcissistic Personality Inventory and the Narcissistic Admiration and Rivalry Questionnaire. <i>Assessment, 26</i> (2), 281-293.</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2018</span> <span class="muted">4 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/1DMt0lYYKmmVrEBIHnRpWJeedESpscnlE/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Richter, D., Schröder, C., Küfner, A. C. P., Grabka, M. M., & Back, M. D. (2018). The rich <i>are</i> different: Unraveling the perceived and self-reported personality profiles of high net-worth individuals. <i>British Journal of Psychology</i> , 110, 769-789</li>
+                                <li><a href="https://doi.org/10.26387/bpa.281.3" target="_blank">[PDF (paywalled)]</a> Vecchione, M., Dentale, F., Graziano, M., Dufner, M., Wetzel, E., <b>Leckelt, M.</b> , & Back, M. D. (2018). An Italian validation of the Narcissistic Admiration and Rivalry Questionnaire (NARQ): Further evidence for a two-dimensional model of grandiose narcissism. <i> Applied Psychology Bulletin, 66</i></li>
+                                <li><a href="https://drive.google.com/file/d/1BPETHrOCu3iQFSIYqnx2YbSgYDAFUNCN/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Wetzel, E., Gerlach, T. M., Ackerman, R. A., Miller, J. D., Chopik, W. J., …, Back, M. D. (2018). Validation of the Narcissistic Admiration and Rivalry Questionnaire short scale (NARQ-S) in convenience and representative samples. <i>Psychological Assessment, 30</i> , 86—96</li>
+                                <li><a href="https://drive.google.com/file/d/1029mWfwnQKUJcotSG7YJDa2hxceL1SeG/view?usp=sharing">[PDF]</a> [book chapter] Back, M.D., Küfner, A.C.P., & <b>Leckelt, M.</b> (2018). Early Impressions of Grandiose Narcissists: A Dual-Pathway Perspective. In A. D. Hermann, A. Brunell, & J. Foster (Eds.), <i>The Handbook of trait narcissism: Key advances, research methods, and controversies</i> (pp. 309—316). New York, NY: Springer</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2017</span> <span class="muted">2 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/1eXesHs2OpwC9MlWq5nqLSOjR_T11IPiY/view?usp=sharing" target="_blank">[PDF]</a> Mahmoodi, J., <b>Leckelt, M.</b> , van Zalk, M.W.H., Geukes, K., & Back, M. D. (2017). Big Data approaches in social and behavioral science: Four key trade-offs and a call for integration. <i>Current Opinion in Behavioral Sciences, 18</i> , 57—62</li>
+                                <li><a href="https://drive.google.com/file/d/1BZ8UYvurKG5EAuUenmcSCMS7qfQ4ELvm/view?usp=sharing" target="_blank">[PDF]</a> Nestler, S., <b>Leckelt, M.</b> , Back, M. D., von der Beck, I., Cress, U., & Oeberst, A. (2017). The production of scientific information on the internet using the example of Wikipedia [Produktion von naturwissenschaftlichen Informationen im Internet am Beispiel von Wikipedia]. <i>Psychologische Rundschau, 68</i> , 172—176.</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2016</span> <span class="muted">2 items</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/1AGOCAVA32j8ZRKQlCQqGMWIV7PpoAsxj/view?usp=sharing" target="_blank">[PDF]</a> Wetzel, E., <b>Leckelt, M.</b> , Gerlach, T. J., & Back, M. D. (2016). Distinguishing subgroups of narcissists with latent class analysis. <i>European Journal of Personality, 30</i> , 374—389</li>
+                                <li><a href="https://drive.google.com/file/d/18WrLt4HCdCPLOJ4DxVd4xHHQOK5yJpVA/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Back, M. D., Foster, J. D., Hutteman, R., Jaeger, G., McCain, J., Twenge, J. M., & Campbell, W. K. (2016). Entering adulthood in a recession tempers later narcissism—But only in men. <i>Journal of Research in Personality, 60</i> , 8—11</li>
+                            </ul>
+                        </details>
+        <details class="accordion">
+                            <summary><span class="badge">2015</span> <span class="muted">1 item</span></summary>
+                            <ul class="pub-list">
+                                <li><a href="https://drive.google.com/file/d/12DrOFabAdmMg41O-IZQX6D_ibLqi5rPE/view?usp=sharing" target="_blank">[PDF]</a> <b> Leckelt, M.</b> , Küfner, A. C. P., Nestler, S., & Back, M. D. (2015). Behavioral processes underlying the decline of narcissists‘ popularity over time. <i>Journal of Personality and Social Psychology, 109</i> , 856—871</li>
+                            </ul>
+                        </details>
+      </div>
+    </div>
+    </div>
+  </section>
 
-            // Draw nearest-neighbor links (up to 4 per particle)
-            const MAX_NEIGHBORS = 4;
-            const MAX_DIST = 160;
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
-                // gather distances to later particles to avoid double-drawing
-                const dists = [];
-                for (let j = i + 1; j < particles.length; j++) {
-                    const d = dist(p.x, p.y, particles[j].x, particles[j].y);
-                    dists.push({ j, d });
-                }
-                dists.sort((a, b) => a.d - b.d);
-                for (let k = 0; k < Math.min(MAX_NEIGHBORS, dists.length); k++) {
-                    const entry = dists[k];
-                    if (entry.d < MAX_DIST) {
-                        const q = particles[entry.j];
-                        const a = map(entry.d, 0, MAX_DIST, 160, 0);
-                        stroke(0, 240, 255, a * 0.9); // neon cyan
-                        strokeWeight(map(entry.d, 0, MAX_DIST, 1.6, 0.2));
-                        line(p.x, p.y, q.x, q.y);
-                    }
-                }
-            }
+  <section class="sec grid" id="press">
+    <div class="lbl">
+      <h2>Press</h2>
+      <span class="aside">2015–2023</span>
+    </div>
+    <div class="body">
+      <p class="intro">
+        Coverage, interviews, and talks — largely about the millionaire and narcissism
+        studies, which the press liked considerably more than I expected.
+      </p>
+      <ul class="outlets" aria-label="Selected outlets">
+        <li>CNBC</li><li>FAZ</li><li>Die ZEIT</li><li>Süddeutsche Zeitung</li><li>Die Welt</li><li>Scientific American</li><li>Business Insider</li><li>Deutschlandfunk Nova</li><li>BPS Research Digest</li>
+      </ul>
 
-            // Draw particles atop lines with soft fill for glow
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
-                noStroke();
-                fill(255, 61, 171, 200); // neon magenta
-                circle(p.x, p.y, p.size * 1.6);
-            }
+      <button class="archive-toggle" type="button" aria-expanded="false" aria-controls="media" data-hide="Hide press">
+        <span class="sign" aria-hidden="true"></span><span class="t">All press</span><span class="n">22</span>
+      </button>
+      <div class="archive-body" id="media">
+        <ul class="media-list">
+        <li><span class="tag">/JUN/2023</span><span class="media-body">Our study on age and gender differences in narcissism was covered in: <a href="https://www.deutschlandfunknova.de/nachrichten/junge-erwachsene-warum-wir-uns-selbst-lieben" target="_blank"><b>Deutschlandfunk Nova</b></a> , <a href="https://www.welt.de/iconist/partnerschaft/article245867840/Narzissmus-Maenner-sind-selbstverliebter-als-Frauen.html" target="_blank"><b>Welt.de</b></a> , and <a href="https://www.tagesspiegel.de/wissen/verzerrtes-selbstbild-manner-sind-selbstverliebter-als-frauen-9987379.html" target="_blank"><b>Tagesspiegel.</b></a></span></li>
+        <li><span class="tag">/APR/2022</span><span class="media-body">Our study on the personality traits of self-made and inherited millionaires was covered in: <a href="https://www.cnbc.com/2022/04/07/many-millionaires-share-these-5-personality-traits-study-says.html" target="_blank"><b>CNBC</b></a> , <b>FAZ</b> <a href="https://www.faz.net/aktuell/wirtschaft/ticken-sie-wie-ein-millionaer-der-test-17928842.html" target="_blank"><b>(here</b></a> , <a href="https://www.faz.net/aktuell/wissen/wie-man-millionaer-wird-soziologischer-blick-auf-schwerreiche-17944706.html" target="_blank"><b> here</b></a> , and, <a href="https://www.faz.net/aktuell/wirtschaft/ticken-sie-wie-ein-millionaer-der-test-17928842.html" target="_blank"><b> here)</b></a> , <a href="https://nationalinterest.org/blog/buzz/do-super-rich-have-different-personalities-rest-us-201721" target="_blank"><b>The National Interest</b></a> , <a href="https://digest.bps.org.uk/2022/04/05/here-are-the-personality-traits-of-the-self-made-millionaire/" target="_blank"><b>British Psychological Society</b></a> , <a href="https://phys.org/news/2022-04-millionaires-risk-tolerant-emotionally-stable.html" target="_blank"><b>Phys.org</b></a> , <a href="https://www.focus.de/finanzen/boerse/f100/es-liegt-an-ihnen-millionaer-werden-leicht-gemacht-wenn-nicht-ihre-persoenlichkeit-im-weg-steht_id_79563858.html" target="_blank"><b>Focus Online (1)</b></a> , <a href="https://www.focus.de/finanzen/experten/reich-werden-testen-sie-ob-sie-das-zeug-zum-millionaer-haben_id_183020688.html" target="_blank"><b>Focus Online (2)</b></a> , <a href="https://www.focus.de/finanzen/news/gastbeitrag-von-rainer-zitelmann-vier-von-fuenf-menschen-werden-nicht-durch-erbschaft-reich_id_186888430.html" target="_blank"><b>Focus Online (2)</b></a> , <a href="https://www.capital.de/karriere/reichen-studie--es-gibt-eine-millionaerspersoenlichkeit-31762802.html" target="_blank"></a> <b>Capital</b> , <a href="https://www.businessinsider.de/karriere/millionaerspersoenlichkeit-je-staerker-sie-ist-desto-groesser-das-vermoegen-a/" target="_blank"><b>Business Insider</b></a> , <a href="https://www.deutschlandfunknova.de/nachrichten/millionaere-der-charakter-der-reichen" target="_blank"><b>Deutschlandfunk Nova</b></a> .</span></li>
+        <li><span class="tag">01/APR/2022</span><span class="media-body"><a href="https://www.faz.net/aktuell/wirtschaft/ticken-sie-wie-ein-millionaer-der-test-17928842.html" target="_blank"><b>FAZ </b></a> published a quiz that allows you to compare your personality to the personality of millionaires.</span></li>
+        <li><span class="tag">01/APR/2022</span><span class="media-body"><a href="https://zeitung.faz.net/fas/wirtschaft/2022-04-03/so-ticken-die-reichen/743479.html" target="_blank"><b>FAZ </b></a> covered our research on the personality traits of self-made and inherited millionaires.</span></li>
+        <li><span class="tag">26/JAN/2021</span><span class="media-body"><a href="https://www.welt.de/kmpkt/article184479698/Diese-Eigenschaften-unterscheiden-Millionaere-vom-Rest-der-Bevoelkerung.html" target="_blank"><b>Die WELT </b></a> covered our research on the personality on high net-worth individuals.</span></li>
+        <li><span class="tag">19/MAY/2020</span><span class="media-body">Invited talk at the <a href="https://mainz-churmeyntz.rotary.de/" target="_blank"> <b>Rotary Club Mainz</b></a> on the personality of high net-worth individuals.</span></li>
+        <li><span class="tag">09/JUL/2019</span><span class="media-body"><a href="https://edition.faz.net/faz-edition/rhein-main-zeitung/2019-07-09/reich-wird-man-durch-selbststaendigkeit/330753.html" target="_blank"><b>FAZ</b> </a> Interview on the personality of high net-worth individuals.</span></li>
+        <li><span class="tag">02/JUN/2019</span><span class="media-body">Our study on the personality of high net-worth individuals was featured in the German news magazine <a href="https://www.focus.de/finanzen/experten/gastbeitrag-von-rainer-zitelmann-neue-studien-zeigen-wie-sich-reiche-von-anderen-menschen-unterscheiden_id_10753722.html" target="_blank"> <b>FOCUS</b>.</a></span></li>
+        <li><span class="tag">05/DEC/2018</span><span class="media-body"><a><b>Hessischer Rundfunk (HR 1)</b></a> Radio interview on the personality of high-net-worth individuals</span></li>
+        <li><span class="tag">NOV/DEC/2018</span><span class="media-body">Our research on the personality of high-net-worth individuals has been covered in several national and international news outlets. For example: <a href="https://www.dailymail.co.uk/news/article-6419959/Millionaires-likely-narcissists-think-theyre-special.html" target="_blank"><b>Daily Mail</b></a> | <a href="https://www.wiwo.de/erfolg/trends/studie-reiche-ticken-anders/23686844.html" target="_blank"><b>WirtschaftsWoche</b></a> | <a href="https://www.welt.de/kmpkt/article184479698/Laut-Psychologen-Diese-Eigenschaften-unterscheiden-deutsche-Millionaere-vom-Rest-der-Bevoelkerung.html" target="_blank"><b>WELT</b></a> | <a href="https://www.morgenpost.de/vermischtes/article215879327/Ticken-Millionaere-wirklich-anders-als-normale-Menschen.html" target="_blank"><b>Berliner Morgenpost</b></a> | <a href="https://derstandard.at/2000092108493/Extravertiert-rivalisierend-Wie-Millionaere-im-Kopf-ticken" target="_blank"><b>Der Standard</b></a></span></li>
+        <li><span class="tag">29/NOV/2017</span><span class="media-body"><a href="https://www1.wdr.de/radio/wdr3/programm/sendungen/wdr3-resonanzen/index.html" target="_blank"><b>WDR3 Resonanzen</b></a> Radio interview on the "narcissism epidemic"</span></li>
+        <li><span class="tag">25/NOV/2017</span><span class="media-body"><a href="http://www.sueddeutsche.de/wissen/psychologie-ich-bin-so-schoen-1.3763455" target="_blank"><b>Süddeutsche Zeitung </b></a> I am so pretty - How narcissistic are Millenials? <a href="https://ssl-account.com/oc.sharedvariance.com/index.php/s/vNd4Dx3tYvNumAg" target="_blank">[PDF]</a></span></li>
+        <li><span class="tag">31/SEP/2017</span><span class="media-body"><a href="http://www.zeit.de/campus/2017-08/beat-the-prof-narzissmus" target="_blank"><b>ZEIT Online</b></a> "Beat the Prof" Quiz on narcissism</span></li>
+        <li><span class="tag">MAY/2017</span><span class="media-body"><a href="http://www.spektrum.de/magazin/gesundes-selbstwertgefuehl-oder-narzissmus/1440292" target="_blank"><b>Gehirn und Geist </b></a> Ego on the Edge</span></li>
+        <li><span class="tag">20/FEB/2017</span><span class="media-body"><a href="https://www1.wdr.de/radio/1live/index.html" target="_blank"><b>WDR 1LIVE </b> </a> Radio interview on Donald Trump and narcissism</span></li>
+        <li><span class="tag">17/FEB/2017</span><span class="media-body"><a href="https://www.swr.de/swraktuell/-/id=13830988/ypzx6n/index.html" target="_blank"><b>SWR Aktuell </b> </a> Radio interview on Donald Trump and narcissism</span></li>
+        <li><span class="tag">07/FEB/2017</span><span class="media-body"><a href="http://www.zeit.de/wissen/gesundheit/2017-02/donald-trump-psychologie-narzisst-diagnose" target="_blank"><b>Die ZEIT </b></a> Trump only loves himself</span></li>
+        <li><span class="tag">06/FEB/2017</span><span class="media-body">Consulting for the German political talk show <b>hart</b> aber <b>fair</b> on differentiating narcissism from psychopathy <a href="http://www.ardmediathek.de/tv/Hart-aber-fair/Trump-und-wir-Experten-beantworten-Zus/Das-Erste/Video?bcastId=561146&amp;documentId=40512562" target="_blank">[LINK]</a></span></li>
+        <li><span class="tag">01/NOV/2016</span><span class="media-body"><a href="https://ssl-account.com/oc.sharedvariance.com/index.php/s/5GIV9tLAUwJIjqB" target="_blank"><b>Die WELT/WELT.de </b></a> - Donald Trump – A Textbook Example Narcissist</span></li>
+        <li><span class="tag">12/APR/2016</span><span class="media-body"><a href="http://www.psychologicalscience.org/news/minds-business/new-study-busts-some-myths-about-millennials.html" target="_blank"><b>Association for Psychological Science </b></a> - New Study Busts Some Myths About Millenials</span></li>
+        <li><span class="tag">07/DEC/2015</span><span class="media-body"><a href="https://www.welt.de/wissenschaft/article149692971/Warum-radikal-ruecksichtlose-Menschen-weiter-kommen.html" target="_blank"><b>Welt am Sonntag </b></a> - Why radically ruthless people get ahead</span></li>
+        <li><span class="tag">29/SEP/2015</span><span class="media-body"><a href="https://blogs.scientificamerican.com/beautiful-minds/why-do-narcissists-lose-popularity-over-time/" target="_blank"><b>Scientific American </b></a> - Why Do Narcissists Lose Popularity Over Time?</span></li>
+      </ul>
+      </div>
+    </div>
+  </section>
 
-            // reset blending
-            blendMode(BLEND);
-        }
+  <section class="sec grid" id="contact">
+    <div class="lbl"><h2>Contact</h2></div>
+    <div class="body">
+      <p class="contact-note">Email is the quickest way to reach me.</p>
+      <ul class="icons">
+        <li><a href="mailto:aaihjblkc@mozmail.com" aria-label="Email" title="Email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5"></rect><path d="M3.6 6.4 12 13l8.4-6.6"></path></svg>
+        </a></li>
+        <li><a href="https://linkedin.com/in/mariusleckelt" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zM7.119 20.452H3.555V9h3.564v11.452z"></path></svg>
+        </a></li>
+        <li><a href="https://github.com/mleckelt" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>
+        </a></li>
+        <li><a href="https://scholar.google.de/citations?user=arVjclEAAAAJ&amp;hl=en" target="_blank" rel="noopener" aria-label="Google Scholar" title="Google Scholar">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.242 13.769 0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"></path></svg>
+        </a></li>
+      </ul>
+    </div>
+  </section>
 
-        class Particle {
-            constructor() {
-                this.x = random(width);
-                this.y = random(height);
-                this.vx = random(-0.4, 0.4);
-                this.vy = random(-0.4, 0.4);
-                this.seed = random(10000);
-                this.size = random(1.5, 3.5);
-            }
-            update() {
-                // Perlin flow-field motion
-                const t = (frameCount + this.seed) * 0.002;
-                const angle = noise(this.x * 0.002, this.y * 0.002, t) * TWO_PI * 2.0;
-                this.vx += cos(angle) * 0.06;
-                this.vy += sin(angle) * 0.06;
-                // gentle damping
-                this.vx *= 0.92;
-                this.vy *= 0.92;
-                this.x += this.vx;
-                this.y += this.vy;
+  <footer class="site-foot">
+    <span>© 2026 Marius Leckelt · Zürich</span>
+    <span>No framework, no build step, no tracking.</span>
+  </footer>
 
-                // wrap edges so particles flow continuously
-                const margin = 8;
-                if (this.x < -margin) this.x = width + margin;
-                if (this.x > width + margin) this.x = -margin;
-                if (this.y < -margin) this.y = height + margin;
-                if (this.y > height + margin) this.y = -margin;
+</div>
 
-                // Subtle attraction to mouse (overlay on top of flow)
-                const dMouse = dist(this.x, this.y, mouseX, mouseY);
-                if (dMouse < 220) {
-                    const f = map(dMouse, 0, 220, 0.06, 0);
-                    this.x = lerp(this.x, mouseX + cos(this.seed) * 8, f);
-                    this.y = lerp(this.y, mouseY + sin(this.seed) * 8, f);
-                }
-            }
-            draw() {
-                noStroke();
-                fill(255, 61, 171, 200); // neon magenta particles
-                circle(this.x, this.y, this.size);
-            }
-        }
+<script>
+// ---- archives: folded by default, opened on demand ----
+document.querySelectorAll('.archive-toggle').forEach(function (btn) {
+  var label = btn.querySelector('.t');
+  var showText = label.textContent;
+  btn.addEventListener('click', function () {
+    var body = document.getElementById(btn.getAttribute('aria-controls'));
+    var open = body.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(open));
+    label.textContent = open ? btn.dataset.hide : showText;
+  });
+});
 
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-        }
-    </script>
+// ---- scholar: static numbers in the markup, refreshed from the weekly series ----
+(function () {
+  function set(id, v) { var el = document.getElementById(id); if (el && v != null) el.textContent = v; }
 
-    <script>
-        // Load pre-fetched scholar_stats.json (generated by fetch_scholar_stats.py)
-        (function(){
-            const el = document.getElementById('scholar-stats');
-            if (!el) return;
-            fetch('static/scholar_stats.json')
-                .then(r => {
-                    if (!r.ok) throw new Error('No stats file');
-                    return r.json();
-                })
-                .then(data => {
-                    // render subtle stats
-                    el.innerHTML = `<span style="color:var(--muted);">Academic impact:</span> <span style="color:var(--neon-cyan); font-family: 'JetBrains Mono', monospace; font-weight:600;">${data.citations}</span> citations · h=${data.h_index} · h10=${data.h_index_10}`;
-                })
-                .catch(() => {
-                    // silent fail (do not show anything if no file)
-                });
-        })();
-    </script>
+  fetch('static/scholar_stats.json')
+    .then(function (r) { if (!r.ok) throw new Error('no stats'); return r.json(); })
+    .then(function (data) {
+      set('m-cit', Number(data.citations).toLocaleString('en-US'));
+      set('m-h', data.h_index);
+      set('m-i10', data.h_index_10);
+      var history = Array.isArray(data.history) ? data.history : [];
+      var spark = document.getElementById('m-spark');
+      if (spark) spark.innerHTML = sparkline(history);
+      if (data.fetched_at) {
+        var d = new Date(data.fetched_at * 1000);
+        set('m-updated', 'Google Scholar · updated ' +
+          d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
+      }
+    })
+    .catch(function () { /* the static numbers in the markup stand */ });
 
-
-    <script>
-        // --- Simple hash-based tabs (home / publications / media) ---
-        function setActiveTab(forceTab) {
-            const raw = forceTab || (window.location.hash || '#home');
-            const tab = raw.replace('#', '') || 'home';
-
-            // Highlight active link
-            document.querySelectorAll('[data-tablink]').forEach(a => {
-                a.classList.toggle('active', a.getAttribute('href') === '#' + tab);
-            });
-
-            // Show/hide sections
-            document.querySelectorAll('.tab-section').forEach(sec => {
-                const match = sec.getAttribute('data-tab') === tab;
-                sec.classList.toggle('active', match);
-            });
-        }
-
-        function handleTabClick(e) {
-            const a = e.target.closest('[data-tablink]');
-            if (!a) return;
-            e.preventDefault();
-
-            const target = a.getAttribute('href') || '#home';
-
-            // Even if the hash is already the same, force update so the UI always responds.
-            if (window.location.hash === target) {
-                setActiveTab(target);
-            } else {
-                window.location.hash = target;
-            }
-        }
-
-        window.addEventListener('hashchange', () => setActiveTab());
-        window.addEventListener('load', () => setActiveTab());
-        document.addEventListener('DOMContentLoaded', () => {
-            // Delegate clicks from the nav (robust even if DOM changes)
-            document.addEventListener('click', handleTabClick);
-
-            if (!window.location.hash) {
-                window.location.hash = '#home';
-            } else {
-                setActiveTab();
-            }
-        });
-    </script>
-
+  function sparkline(history) {
+    if (history.length < 2) return '';
+    var vals = history.map(function (h) { return h.citations; });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (hi === lo) return '';
+    var w = 96, h = 24, top = 3, bot = 21;
+    var pts = vals.map(function (v, i) {
+      return [+(2 + (w - 4) * i / (vals.length - 1)).toFixed(2),
+              +(bot - (bot - top) * (v - lo) / (hi - lo)).toFixed(2)];
+    });
+    var d = 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L ');
+    var end = pts[pts.length - 1];
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" ' +
+      'aria-label="Citations rose from ' + lo + ' to ' + hi + ' between ' + history[0].date + ' and ' + history[history.length - 1].date + '">' +
+      '<path fill="none" stroke="#989CA1" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" d="' + d + '"></path>' +
+      '<circle cx="' + end[0] + '" cy="' + end[1] + '" r="2.5" fill="#2F5D4F"></circle></svg>';
+  }
+})();
+</script>
 </body>
 </html>
