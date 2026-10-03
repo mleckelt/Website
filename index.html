@@ -141,7 +141,7 @@ ul.media-list li{
       </div>
       <div>
         <h3>Before</h3>
-        <p>AI consulting at Bain — took products from first concept through to live, then scaled them to users.</p>
+        <p>AI consulting at Bain — took products from first concept through to live, then scaled them.</p>
       </div>
       <div>
         <h3>Before that</h3>
@@ -167,7 +167,6 @@ ul.media-list li{
         <div class="metric"><b id="m-h">18</b><span>h-index</span></div>
         <div class="metric"><b id="m-i10">20</b><span>i10-index</span></div>
         <div class="metric-trend">
-          <span id="m-spark"></span>
           <span id="m-updated">Google Scholar, updated weekly</span>
         </div>
       </div>
@@ -391,9 +390,6 @@ document.querySelectorAll('.archive-toggle').forEach(function (btn) {
       set('m-cit', Number(data.citations).toLocaleString('en-US'));
       set('m-h', data.h_index);
       set('m-i10', data.h_index_10);
-      var history = Array.isArray(data.history) ? data.history : [];
-      var spark = document.getElementById('m-spark');
-      if (spark) spark.innerHTML = sparkline(history);
       if (data.fetched_at) {
         var d = new Date(data.fetched_at * 1000);
         set('m-updated', 'Google Scholar · updated ' +
@@ -401,24 +397,6 @@ document.querySelectorAll('.archive-toggle').forEach(function (btn) {
       }
     })
     .catch(function () { /* the static numbers in the markup stand */ });
-
-  function sparkline(history) {
-    if (history.length < 2) return '';
-    var vals = history.map(function (h) { return h.citations; });
-    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
-    if (hi === lo) return '';
-    var w = 96, h = 24, top = 3, bot = 21;
-    var pts = vals.map(function (v, i) {
-      return [+(2 + (w - 4) * i / (vals.length - 1)).toFixed(2),
-              +(bot - (bot - top) * (v - lo) / (hi - lo)).toFixed(2)];
-    });
-    var d = 'M ' + pts.map(function (p) { return p[0] + ' ' + p[1]; }).join(' L ');
-    var end = pts[pts.length - 1];
-    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" ' +
-      'aria-label="Citations rose from ' + lo + ' to ' + hi + ' between ' + history[0].date + ' and ' + history[history.length - 1].date + '">' +
-      '<path fill="none" stroke="#989CA1" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" d="' + d + '"></path>' +
-      '<circle cx="' + end[0] + '" cy="' + end[1] + '" r="2.5" fill="#2F5D4F"></circle></svg>';
-  }
 })();
 </script>
 </body>
